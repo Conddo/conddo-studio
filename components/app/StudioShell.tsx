@@ -5,7 +5,7 @@ import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import {
   Home, Briefcase, List, BarChart3, CheckCircle2, Activity,
-  Users, LogOut, Menu, Tag, type LucideIcon,
+  Users, LogOut, Menu, Tag, BookOpen, type LucideIcon,
 } from "lucide-react";
 import { useApiQuery } from "@/hooks/useApiQuery";
 import { meQuery, logout } from "@/lib/account";
@@ -36,6 +36,7 @@ const LEAD: NavItem[] = [
   { label: "QA Queue", href: "/qa", icon: CheckCircle2 },
   { label: "Staff", href: "/admin/staff", icon: Users },
   { label: "Job Types", href: "/admin/job-types", icon: Tag },
+  { label: "Design Standards", href: "/admin/design-standards", icon: BookOpen },
 ];
 
 const navFor = (role?: Role): NavItem[] => {

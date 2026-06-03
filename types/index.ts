@@ -8,6 +8,28 @@ export type JobStatus =
 
 export type SlaTone = "GREEN" | "AMBER" | "RED";
 
+/** Design Standard "kind" — the AI uses these to ground its suggestions per
+ *  vertical (e.g. a PHARMACY job pulls the active PALETTE standards for that
+ *  vertical into the colour-palette prompt). The set is fixed by the backend. */
+export type DesignStandardKind = "PALETTE" | "LAYOUT" | "COPY_PATTERN" | "TYPOGRAPHY";
+
+/** Design Standard — admin-curated reference content per (vertical, kind). A
+ *  null vertical means "applies to every vertical". `content` is a free-form
+ *  JSONB blob whose shape depends on `kind` (palette hex map, layout grid
+ *  config, copy snippets, font/scale config). Mirrors
+ *  io.conddo.studio.web.dto.DesignStandardDto. */
+export type DesignStandard = {
+  id: string;
+  vertical: string | null;
+  kind: DesignStandardKind;
+  name: string;
+  description: string | null;
+  content: Record<string, unknown>;
+  active: boolean;
+  createdAt: string;
+  updatedAt: string;
+};
+
 /** A QA checklist item attached to a JobType (or override). Stored as JSONB on
  *  the backend; the FE keeps it loosely typed since admins can add arbitrary
  *  keys. The minimum contract is { id, label, required }. */
