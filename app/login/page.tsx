@@ -1,9 +1,10 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { Eye, EyeOff, Loader2, AlertCircle } from "lucide-react";
 import { login } from "@/lib/account";
+import { clearTokens } from "@/lib/auth";
 
 const inputCls =
   "h-11 w-full rounded-md border border-neutral-strong bg-neutral-surface px-3.5 text-[15px] text-ink placeholder:text-content-muted focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary";
@@ -17,6 +18,11 @@ export default function LoginPage() {
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
+  // Anyone landing here is starting a fresh session. Wipe any stale tokens
+  // so the next request can't pre-flight with a dead Bearer (which Spring
+  // would reject even on /auth/login).
+  useEffect(() => { clearTokens(); }, []);
+
   async function onSubmit(e: React.FormEvent) {
     e.preventDefault();
     setError(null);
@@ -26,6 +32,7 @@ export default function LoginPage() {
       router.push("/dashboard");
     } catch (err) {
       setError(err instanceof Error ? err.message : "Sign in failed. Check your details and try again.");
+    } finally {
       setSubmitting(false);
     }
   }

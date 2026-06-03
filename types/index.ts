@@ -38,6 +38,47 @@ export type JobCard = {
   createdAt: string;
 };
 
+/** A file uploaded to a job (Cloudinary-backed). Backend returns a loose
+ *  Map<String, Object> — these are the fields the asset service emits. */
+export type JobAsset = {
+  id: string;
+  filename: string;
+  url: string;                  // Cloudinary secure_url
+  publicId?: string;
+  contentType?: string;
+  bytes?: number;
+  uploadedBy?: string;
+  uploadedByName?: string;
+  uploadedAt?: string;
+};
+
+// ----- AI assistant (§8) — fail-safe results; `available:false` means Claude
+//       is unconfigured/down/unparseable and the UI should hide the assist UX
+//       rather than show an error.
+
+export type AiCopyResult = {
+  available: boolean;
+  section: string;
+  copy: Record<string, unknown>; // section-specific shape (HERO: headline/subheadline/ctaText, etc.)
+};
+
+export type AiPaletteResult = {
+  available: boolean;
+  palette: Record<string, string>;
+};
+
+export type AiRankedImage = {
+  url: string;
+  score: number;                // 1..10
+  reason: string;
+  recommendation: "RECOMMENDED" | "ACCEPTABLE" | "REJECT";
+};
+
+export type AiRankResult = {
+  available: boolean;
+  ranked: AiRankedImage[];      // sorted by score desc
+};
+
 export type JobActivity = {
   id: string;
   action: string;

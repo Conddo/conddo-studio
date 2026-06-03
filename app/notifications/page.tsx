@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useState } from "react";
 import Link from "next/link";
-import { Bell, CheckCheck, Loader2 } from "lucide-react";
+import { Bell, CheckCheck, Loader2, MailOpen } from "lucide-react";
 import { StudioShell } from "@/components/app/StudioShell";
 import { LoadingState, ErrorState, EmptyState } from "@/components/ui/States";
 import { notificationsApi } from "@/lib/notifications";
@@ -61,6 +61,19 @@ export default function NotificationsPage() {
     finally { setBusyId(null); }
   }
 
+  async function markAllRead() {
+    if (!feed || feed.unread === 0 || busyId === "all") return;
+    setBusyId("all");
+    // Optimistic: flip every unread, then call. Resync from the server on error.
+    setFeed((prev) => prev && {
+      items: prev.items.map((x) => ({ ...x, read: true })),
+      unread: 0,
+    });
+    try { await notificationsApi.markAllRead(); }
+    catch { await load(true); }
+    finally { setBusyId(null); }
+  }
+
   const items = feed?.items ?? [];
 
   return (
@@ -68,14 +81,25 @@ export default function NotificationsPage() {
       title="Notifications"
       subtitle={feed ? `${feed.unread} unread` : "Your activity feed."}
       actions={
-        <button
-          onClick={() => setUnreadOnly((v) => !v)}
-          className={`inline-flex items-center gap-2 rounded-md border px-3 py-1.5 text-[13px] font-medium transition-colors ${
-            unreadOnly ? "border-primary bg-primary-bg text-primary-light" : "border-neutral-strong text-content-secondary hover:bg-neutral-surface2 hover:text-ink"
-          }`}
-        >
-          <CheckCheck size={15} /> {unreadOnly ? "Showing unread" : "Show unread only"}
-        </button>
+        <>
+          {feed && feed.unread > 0 && (
+            <button
+              onClick={markAllRead}
+              disabled={busyId === "all"}
+              className="inline-flex items-center gap-2 rounded-md border border-neutral-strong px-3 py-1.5 text-[13px] font-medium text-content-secondary transition-colors hover:bg-neutral-surface2 hover:text-ink disabled:opacity-50"
+            >
+              {busyId === "all" ? <Loader2 size={15} className="animate-spin" /> : <MailOpen size={15} />} Mark all read
+            </button>
+          )}
+          <button
+            onClick={() => setUnreadOnly((v) => !v)}
+            className={`inline-flex items-center gap-2 rounded-md border px-3 py-1.5 text-[13px] font-medium transition-colors ${
+              unreadOnly ? "border-primary bg-primary-bg text-primary-light" : "border-neutral-strong text-content-secondary hover:bg-neutral-surface2 hover:text-ink"
+            }`}
+          >
+            <CheckCheck size={15} /> {unreadOnly ? "Showing unread" : "Show unread only"}
+          </button>
+        </>
       }
     >
       {loading && !feed ? (

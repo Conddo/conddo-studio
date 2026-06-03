@@ -33,6 +33,12 @@ export const isServerError = (e: unknown): boolean =>
 
 type Body = Record<string, unknown> | undefined;
 
+// Hard ceiling on a single request. Long enough to ride out Render's
+// free-tier cold start, short enough to surface as a real error instead
+// of an infinite spinner.
+const REQUEST_TIMEOUT_MS = 45_000;
+const UPLOAD_TIMEOUT_MS = 120_000;
+
 // One in-flight refresh shared across concurrent 401s.
 let refreshing: Promise<string | null> | null = null;
 
@@ -72,7 +78,15 @@ export async function refreshAccessToken(): Promise<string | null> {
 async function request<T>(method: string, path: string, body?: Body, retried = false): Promise<Result<T>> {
   if (!ROOT) throw new StudioApiError("api_not_configured", "Studio API URL is not configured.");
 
-  const token = getAccessToken();
+  // /auth/* endpoints are pre-auth. Never attach a Bearer token to them —
+  // Spring's oauth2ResourceServer validates the token BEFORE the permitAll
+  // check, so a stale/expired token poisons even public login/logout calls
+  // with "Authentication is required to access this resource". Mirrors the
+  // matching fix in the conddo-app client (1561704).
+  const isAuthCall = path.startsWith("/auth/");
+  const token = isAuthCall ? null : getAccessToken();
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), REQUEST_TIMEOUT_MS);
   let res: Response;
   try {
     res = await fetch(`${BASE}${path}`, {
@@ -82,13 +96,18 @@ async function request<T>(method: string, path: string, body?: Body, retried = f
         ...(token ? { Authorization: `Bearer ${token}` } : {}),
       },
       body: body ? JSON.stringify(body) : undefined,
+      signal: controller.signal,
     });
-  } catch {
-    throw new StudioApiError("network_error", "Could not reach the Studio server.");
+  } catch (err) {
+    const aborted = err instanceof DOMException && err.name === "AbortError";
+    throw new StudioApiError(
+      aborted ? "request_timeout" : "network_error",
+      aborted ? "The server didn't respond in time. Please try again." : "Could not reach the Studio server.",
+    );
+  } finally {
+    clearTimeout(timer);
   }
 
-  // Don't auto-refresh auth calls themselves.
-  const isAuthCall = path.startsWith("/auth/");
   if (res.status === 401 && !isAuthCall && !retried && token) {
     const next = await refreshAccessToken();
     if (next) return request<T>(method, path, body, true);
@@ -115,9 +134,59 @@ async function request<T>(method: string, path: string, body?: Body, retried = f
   return { data: (json ? json.data : undefined) as T, meta: json?.meta };
 }
 
+/** Multipart file upload — used by asset uploads. Lets the browser set the
+ *  multipart boundary (no Content-Type header from us). Same Bearer token +
+ *  401-refresh behaviour as request(). */
+export async function uploadFile<T>(path: string, form: FormData, retried = false): Promise<Result<T>> {
+  if (!ROOT) throw new StudioApiError("api_not_configured", "Studio API URL is not configured.");
+
+  const token = getAccessToken();
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), UPLOAD_TIMEOUT_MS);
+  let res: Response;
+  try {
+    res = await fetch(`${BASE}${path}`, {
+      method: "POST",
+      headers: token ? { Authorization: `Bearer ${token}` } : undefined,
+      body: form,
+      signal: controller.signal,
+    });
+  } catch (err) {
+    const aborted = err instanceof DOMException && err.name === "AbortError";
+    throw new StudioApiError(
+      aborted ? "request_timeout" : "network_error",
+      aborted ? "Upload timed out. Please try again." : "Could not reach the Studio server.",
+    );
+  } finally {
+    clearTimeout(timer);
+  }
+
+  if (res.status === 401 && !retried && token) {
+    const next = await refreshAccessToken();
+    if (next) return uploadFile<T>(path, form, true);
+    if (typeof window !== "undefined" && !window.location.pathname.startsWith("/login")) {
+      window.location.href = "/login";
+    }
+    throw new StudioApiError("unauthorized", "Your session has expired. Please sign in again.", 401);
+  }
+
+  let json: ApiResponse<T> | null = null;
+  try { json = (await res.json()) as ApiResponse<T>; } catch { /* non-JSON */ }
+
+  if (!res.ok || (json && json.success === false)) {
+    throw new StudioApiError(
+      json?.error?.code ?? "request_failed",
+      json?.error?.message ?? res.statusText ?? "Upload failed.",
+      res.status,
+    );
+  }
+  return { data: (json ? json.data : undefined) as T, meta: json?.meta };
+}
+
 export const api = {
   get: <T>(path: string) => request<T>("GET", path),
   post: <T>(path: string, body?: Body) => request<T>("POST", path, body),
   patch: <T>(path: string, body?: Body) => request<T>("PATCH", path, body),
   del: <T>(path: string) => request<T>("DELETE", path),
+  upload: <T>(path: string, form: FormData) => uploadFile<T>(path, form),
 };

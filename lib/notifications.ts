@@ -11,4 +11,6 @@ export const notificationsApi = {
   feed: (unreadOnly = false) =>
     api.get<NotificationFeed>(`/notifications${unreadOnly ? "?unread=true" : ""}`),
   markRead: (id: string) => api.patch<void>(`/notifications/${id}/read`),
+  /** Bulk-mark every unread notification as read. Returns the count cleared. */
+  markAllRead: () => api.patch<{ updated: number }>(`/notifications/read-all`),
 };

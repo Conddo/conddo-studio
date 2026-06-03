@@ -7,6 +7,7 @@ import { StudioShell } from "@/components/app/StudioShell";
 import { LoadingState, ErrorState, EmptyState } from "@/components/ui/States";
 import { StatusBadge, JobTypePill, SlaBadge } from "@/components/ui/Badges";
 import { JobLeadActions } from "@/components/app/JobLeadActions";
+import { JobAssets } from "@/components/app/JobAssets";
 import { useApiQuery } from "@/hooks/useApiQuery";
 import { jobsApi } from "@/lib/jobs";
 import { meQuery } from "@/lib/account";
@@ -170,6 +171,9 @@ function Detail({ job, onChanged }: { job: JobDetail; onChanged: () => void }) {
           <h3 className="mb-4 text-[15px] font-medium text-ink">Business brief</h3>
           <BriefView brief={job.brief} />
         </div>
+
+        {/* Files — drafts, screenshots, deliverables (Cloudinary, §9) */}
+        <JobAssets jobId={job.id} />
 
         {/* QA history */}
         {job.qaReviews.length > 0 && (
