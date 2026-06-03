@@ -5,6 +5,7 @@ import { List, Briefcase } from "lucide-react";
 import { StudioShell } from "@/components/app/StudioShell";
 import { JobList } from "@/components/app/JobList";
 import { useApiQuery } from "@/hooks/useApiQuery";
+import { useStudioEvent } from "@/hooks/useStudioEvent";
 import { meQuery } from "@/lib/account";
 import { jobsApi } from "@/lib/jobs";
 import type { Staff } from "@/types";
@@ -13,6 +14,13 @@ export default function DashboardPage() {
   const { data: staff } = useApiQuery<Staff>(meQuery);
   const mine = useApiQuery(jobsApi.myJobs);
   const available = useApiQuery(jobsApi.available);
+
+  // Live: anything that moves the "active jobs" or "available jobs" counts.
+  useStudioEvent("job.created", () => { available.refetch(); });
+  useStudioEvent("job.claimed", () => { mine.refetch(); available.refetch(); });
+  useStudioEvent("job.reassigned", () => { mine.refetch(); });
+  useStudioEvent("job.approved", () => { mine.refetch(); });
+  useStudioEvent("job.revision_requested", () => { mine.refetch(); });
   const myJobs = mine.data ?? [];
   const firstName = staff?.name?.trim().split(/\s+/)[0] ?? "";
 

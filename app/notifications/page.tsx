@@ -8,13 +8,12 @@ import { LoadingState, ErrorState, EmptyState } from "@/components/ui/States";
 import { notificationsApi } from "@/lib/notifications";
 import { StudioApiError, type Result } from "@/lib/api";
 import { fmtDateTime } from "@/lib/format";
+import { useStudioEvent } from "@/hooks/useStudioEvent";
 import type { NotificationFeed, StudioNotification } from "@/types";
 
 // Lightweight type label — backend `type` is an enum string like JOB_ASSIGNED.
 const typeLabel = (t: string) =>
   t.replace(/_/g, " ").toLowerCase().replace(/(^| )./g, (m) => m.toUpperCase());
-
-const POLL_MS = 30_000;
 
 export default function NotificationsPage() {
   const [feed, setFeed] = useState<NotificationFeed | null>(null);
@@ -39,14 +38,10 @@ export default function NotificationsPage() {
   // Initial + when toggle changes.
   useEffect(() => { load(); }, [load]);
 
-  // Silent poll while the tab is open (no SSE yet — see lib/notifications.ts).
-  useEffect(() => {
-    const id = setInterval(() => {
-      if (typeof document !== "undefined" && document.visibilityState !== "visible") return;
-      load(true);
-    }, POLL_MS);
-    return () => clearInterval(id);
-  }, [load]);
+  // Live: a fresh `notification.created` arrives → silently re-pull the feed
+  // so the new item appears at the top with the right metadata (we can't
+  // assemble it from the event alone because the feed also tracks unread).
+  useStudioEvent("notification.created", () => { load(true); });
 
   async function markRead(n: StudioNotification) {
     if (n.read || busyId) return;

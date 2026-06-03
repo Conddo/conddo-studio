@@ -1,9 +1,9 @@
 // Notifications — /api/jobs/notifications/* (feed + mark-read).
 //
-// SSE is not yet exposed by the backend (no SseEmitter / text/event-stream
-// endpoint at time of writing) — the UI polls this feed instead. When the
-// backend ships a stream endpoint, swap the polling in NotificationsBell /
-// the page over to EventSource without changing this module's shape.
+// Real-time updates flow over the SSE stream (lib/sse.ts → `notification.created`
+// event). This module just owns the HTTP read/mutate side: hydrate, mark one,
+// mark all. NotificationsBell and the notifications page hydrate once via
+// feed() and then track changes via useStudioEvent.
 import { api } from "./api";
 import type { NotificationFeed } from "@/types";
 

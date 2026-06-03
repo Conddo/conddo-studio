@@ -13,6 +13,7 @@ import { getAccessToken } from "@/lib/auth";
 import { refreshAccessToken } from "@/lib/api";
 import { roleLabel, initialsOf } from "@/lib/format";
 import { NotificationsBell } from "@/components/app/NotificationsBell";
+import { studioEvents } from "@/lib/sse";
 import type { Role, Staff } from "@/types";
 
 type NavItem = { label: string; href: string; icon: LucideIcon };
@@ -117,7 +118,17 @@ export function StudioShell({ title, subtitle, actions, children }: {
     return () => { active = false; };
   }, [router]);
 
+  // Open one Studio SSE stream per browser tab as soon as we know we're
+  // authed; close it when the shell unmounts (i.e. on full app teardown).
+  // Logout disconnects explicitly so events stop the moment the token dies.
+  useEffect(() => {
+    if (authed !== true) return;
+    studioEvents.connect();
+    return () => { studioEvents.disconnect(); };
+  }, [authed]);
+
   async function handleLogout() {
+    studioEvents.disconnect();
     await logout();
     router.replace("/login");
   }

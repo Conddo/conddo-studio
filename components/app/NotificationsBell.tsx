@@ -4,33 +4,32 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import { Bell } from "lucide-react";
 import { notificationsApi } from "@/lib/notifications";
+import { useStudioEvent } from "@/hooks/useStudioEvent";
 
-const POLL_MS = 30_000;
-
-/** Header bell with unread badge. Polls the feed for an unread count (no SSE
- *  endpoint yet — see lib/notifications.ts). Quiet failure: a missing/erroring
- *  notifications service shouldn't take the header down. */
+/** Header bell with unread badge. Hydrates the count once from /notifications,
+ *  then keeps it in sync via the `notification.created` SSE event — no
+ *  polling. Quiet failure: a missing/erroring backend doesn't break the
+ *  header chrome. */
 export function NotificationsBell() {
   const [unread, setUnread] = useState<number>(0);
 
+  // One-shot hydrate of the initial unread count. After that the count is
+  // driven by SSE (or by the notifications page itself when the user reads).
   useEffect(() => {
     let cancelled = false;
-    let timer: ReturnType<typeof setInterval> | null = null;
-
-    const tick = async () => {
-      if (typeof document !== "undefined" && document.visibilityState !== "visible") return;
+    (async () => {
       try {
         const r = await notificationsApi.feed();
         if (!cancelled) setUnread(r.data.unread ?? 0);
-      } catch {
-        /* keep last known count; don't surface backend errors in the chrome */
-      }
-    };
-
-    tick();
-    timer = setInterval(tick, POLL_MS);
-    return () => { cancelled = true; if (timer) clearInterval(timer); };
+      } catch { /* keep last known count */ }
+    })();
+    return () => { cancelled = true; };
   }, []);
+
+  // Live increment when the backend pushes a new notification.
+  useStudioEvent("notification.created", () => {
+    setUnread((n) => n + 1);
+  });
 
   return (
     <Link

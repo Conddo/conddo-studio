@@ -4,6 +4,7 @@ import { Activity, Briefcase, Clock } from "lucide-react";
 import { StudioShell } from "@/components/app/StudioShell";
 import { JobList } from "@/components/app/JobList";
 import { useApiQuery } from "@/hooks/useApiQuery";
+import { useStudioEvent } from "@/hooks/useStudioEvent";
 import { adminApi } from "@/lib/admin";
 import { statusStyle, slaTone as slaToneMap } from "@/lib/format";
 import type { JobStatus, SlaTone } from "@/types";
@@ -22,6 +23,20 @@ export default function OperationsDashboardPage() {
   const bySla = data?.bySla ?? {};
 
   const totalActive = jobs.filter((j) => !["APPROVED", "DELIVERED", "CANCELLED"].includes(j.status)).length;
+
+  // Live: every job lifecycle event can shift the dashboard's counts, so refetch
+  // the snapshot. sla.tick also lands here every 5 min while AMBER/RED jobs exist —
+  // we refetch on it too so the tone counts update without waiting for the next page load.
+  useStudioEvent("job.created", refetch);
+  useStudioEvent("job.claimed", refetch);
+  useStudioEvent("job.started", refetch);
+  useStudioEvent("job.submitted", refetch);
+  useStudioEvent("job.approved", refetch);
+  useStudioEvent("job.revision_requested", refetch);
+  useStudioEvent("job.reassigned", refetch);
+  useStudioEvent("job.escalated", refetch);
+  useStudioEvent("job.sla_extended", refetch);
+  useStudioEvent("sla.tick", refetch);
 
   return (
     <StudioShell title="Operations" subtitle="Real-time view of every job across the floor.">
