@@ -78,13 +78,16 @@ export async function refreshAccessToken(): Promise<string | null> {
 async function request<T>(method: string, path: string, body?: Body, retried = false): Promise<Result<T>> {
   if (!ROOT) throw new StudioApiError("api_not_configured", "Studio API URL is not configured.");
 
-  // /auth/* endpoints are pre-auth. Never attach a Bearer token to them —
-  // Spring's oauth2ResourceServer validates the token BEFORE the permitAll
-  // check, so a stale/expired token poisons even public login/logout calls
-  // with "Authentication is required to access this resource". Mirrors the
-  // matching fix in the conddo-app client (1561704).
-  const isAuthCall = path.startsWith("/auth/");
-  const token = isAuthCall ? null : getAccessToken();
+  // The PUBLIC auth endpoints (login/refresh/logout) are pre-auth — they
+  // shouldn't carry a Bearer token. Spring's oauth2ResourceServer validates
+  // any token it sees BEFORE the permitAll check, so a stale/expired token
+  // poisons even those public calls with "Authentication is required to
+  // access this resource". (Same shape as the conddo-app fix 1561704.)
+  //
+  // /auth/me is the lone authenticated endpoint under /auth/* — it's how
+  // the UI asks "who am I?", so it MUST carry the token. Don't strip there.
+  const isPublicAuthCall = path === "/auth/login" || path === "/auth/refresh" || path === "/auth/logout";
+  const token = isPublicAuthCall ? null : getAccessToken();
   const controller = new AbortController();
   const timer = setTimeout(() => controller.abort(), REQUEST_TIMEOUT_MS);
   let res: Response;
@@ -108,7 +111,7 @@ async function request<T>(method: string, path: string, body?: Body, retried = f
     clearTimeout(timer);
   }
 
-  if (res.status === 401 && !isAuthCall && !retried && token) {
+  if (res.status === 401 && !isPublicAuthCall && !retried && token) {
     const next = await refreshAccessToken();
     if (next) return request<T>(method, path, body, true);
     if (typeof window !== "undefined" && !window.location.pathname.startsWith("/login")) {
