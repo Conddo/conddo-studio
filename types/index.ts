@@ -8,6 +8,31 @@ export type JobStatus =
 
 export type SlaTone = "GREEN" | "AMBER" | "RED";
 
+/** A QA checklist item attached to a JobType (or override). Stored as JSONB on
+ *  the backend; the FE keeps it loosely typed since admins can add arbitrary
+ *  keys. The minimum contract is { id, label, required }. */
+export type QaChecklistItem = {
+  id: string;
+  label: string;
+  required?: boolean;
+  section?: string;
+  [extra: string]: unknown;
+};
+
+/** Studio job type — mirrors io.conddo.studio.web.dto.JobTypeDto. The id is
+ *  UPPER_SNAKE_CASE (3-32 chars) and stable; everything else can be edited by
+ *  ADMIN via PATCH. Soft-delete via DELETE flips `active` to false. */
+export type JobType = {
+  id: string;
+  displayName: string;
+  colour: string;
+  assignedToRoles: string[];
+  slaHours: number;
+  qaRequired: boolean;
+  qaChecklist: QaChecklistItem[];
+  active: boolean;
+};
+
 export type Staff = {
   id: string;
   name: string;

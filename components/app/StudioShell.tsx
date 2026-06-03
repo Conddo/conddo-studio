@@ -5,7 +5,7 @@ import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import {
   Home, Briefcase, List, BarChart3, CheckCircle2, Activity,
-  Users, LogOut, Menu, type LucideIcon,
+  Users, LogOut, Menu, Tag, type LucideIcon,
 } from "lucide-react";
 import { useApiQuery } from "@/hooks/useApiQuery";
 import { meQuery, logout } from "@/lib/account";
@@ -27,13 +27,15 @@ const WORKER: NavItem[] = [
 const QA: NavItem[] = [
   { label: "QA Queue", href: "/qa", icon: CheckCircle2 },
 ];
-// LEAD/ADMIN — only links the backend supports today. SLA / Job Types / Standards
-// land when their endpoints do (Studio API reference §15 — currently not in code).
+// LEAD/ADMIN nav. Job Types is gated to LEAD+ADMIN (the backend allows
+// TEAM_LEAD reads + ADMIN mutations). Design Standards + Platform pages
+// land here once their backends ship (see backend §23, BACKEND_STATUS §2).
 const LEAD: NavItem[] = [
   { label: "Operations", href: "/admin", icon: Activity },
   { label: "All Jobs", href: "/admin/jobs", icon: Briefcase },
   { label: "QA Queue", href: "/qa", icon: CheckCircle2 },
   { label: "Staff", href: "/admin/staff", icon: Users },
+  { label: "Job Types", href: "/admin/job-types", icon: Tag },
 ];
 
 const navFor = (role?: Role): NavItem[] => {
