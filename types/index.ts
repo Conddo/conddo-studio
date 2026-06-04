@@ -55,6 +55,56 @@ export type JobType = {
   active: boolean;
 };
 
+// ----- Platform Admin (§23) -----
+// Mirrors io.conddo.studio.web.dto.PlatformTenantDto / PlatformUserDto.
+
+export type PlatformTenantStatus = "ACTIVE" | "SUSPENDED" | "DELETED";
+
+export type PlatformTenantCounts = {
+  users: number;
+  activeUsers: number;
+  activeJobs: number;
+  deliveredJobs: number;
+};
+
+export type PlatformTenant = {
+  id: string;
+  name: string;
+  slug: string;
+  verticalId: string | null;
+  planId: string | null;
+  customDomain: string | null;
+  status: PlatformTenantStatus;
+  websiteStatus: string | null;
+  websitePublishedAt: string | null;
+  createdAt: string;
+  counts: PlatformTenantCounts | null;
+};
+
+export type PlatformTenantSummary = {
+  id: string;
+  name: string;
+  slug: string;
+  verticalId: string | null;
+  planId: string | null;
+  status: PlatformTenantStatus;
+};
+
+export type PlatformUser = {
+  id: string;
+  tenantId: string;
+  email: string;
+  fullName: string | null;
+  role: string;
+  phone: string | null;
+  active: boolean;
+  phoneVerified: boolean;
+  googleLinked: boolean;
+  lastLoginAt: string | null;
+  createdAt: string;
+  tenant: PlatformTenantSummary | null;
+};
+
 export type Staff = {
   id: string;
   name: string;

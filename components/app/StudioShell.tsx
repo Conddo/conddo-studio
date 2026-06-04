@@ -5,7 +5,7 @@ import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import {
   Home, Briefcase, List, BarChart3, CheckCircle2, Activity,
-  Users, LogOut, Menu, Tag, BookOpen, type LucideIcon,
+  Users, LogOut, Menu, Tag, BookOpen, Building2, UserCog, type LucideIcon,
 } from "lucide-react";
 import { useApiQuery } from "@/hooks/useApiQuery";
 import { meQuery, logout } from "@/lib/account";
@@ -27,9 +27,7 @@ const WORKER: NavItem[] = [
 const QA: NavItem[] = [
   { label: "QA Queue", href: "/qa", icon: CheckCircle2 },
 ];
-// LEAD/ADMIN nav. Job Types is gated to LEAD+ADMIN (the backend allows
-// TEAM_LEAD reads + ADMIN mutations). Design Standards + Platform pages
-// land here once their backends ship (see backend §23, BACKEND_STATUS §2).
+// LEAD nav — covers ops + Studio admin items both TEAM_LEAD and ADMIN can see.
 const LEAD: NavItem[] = [
   { label: "Operations", href: "/admin", icon: Activity },
   { label: "All Jobs", href: "/admin/jobs", icon: Briefcase },
@@ -38,10 +36,17 @@ const LEAD: NavItem[] = [
   { label: "Job Types", href: "/admin/job-types", icon: Tag },
   { label: "Design Standards", href: "/admin/design-standards", icon: BookOpen },
 ];
+// ADMIN-only extras — Platform Admin (§23) is cross-tenant management;
+// blast radius too wide for TEAM_LEAD.
+const ADMIN_EXTRAS: NavItem[] = [
+  { label: "Platform Tenants", href: "/admin/platform/tenants", icon: Building2 },
+  { label: "Platform Users", href: "/admin/platform/users", icon: UserCog },
+];
 
 const navFor = (role?: Role): NavItem[] => {
   if (role === "QA_REVIEWER") return QA;
-  if (role === "TEAM_LEAD" || role === "ADMIN") return LEAD;
+  if (role === "ADMIN") return [...LEAD, ...ADMIN_EXTRAS];
+  if (role === "TEAM_LEAD") return LEAD;
   return WORKER; // DEVELOPER / DESIGNER / WRITER
 };
 
