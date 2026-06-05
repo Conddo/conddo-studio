@@ -1,7 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useRef, useState } from "react";
-import { Upload, Trash2, Loader2, FileText, Image as ImageIcon, ExternalLink } from "lucide-react";
+import { Upload, Trash2, Loader2, FileText, Image as ImageIcon, ExternalLink, Download } from "lucide-react";
 import { assetsApi } from "@/lib/assets";
 import { StudioApiError } from "@/lib/api";
 import { fmtDateTime } from "@/lib/format";
@@ -9,13 +9,20 @@ import type { JobAsset } from "@/types";
 
 /** File attachments on a job (Cloudinary-backed, §9). Any signed-in staff
  *  member can upload, list, and delete. The parent screen decides whether
- *  to render this (e.g. only on jobs the user can edit). */
+ *  to render this (e.g. only on jobs the user can edit).
+ *
+ *  Devs working on a job download the FULL job bundle (assets + manifest +
+ *  brief) via the "Download bundle" button, which hits
+ *  GET /api/jobs/{id}/export. That's the canonical handoff — they build the
+ *  website locally from the bundle's contents. The per-file links here are
+ *  just for quickly grabbing one asset without the full ZIP. */
 export function JobAssets({ jobId }: { jobId: string }) {
   const [assets, setAssets] = useState<JobAsset[] | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [uploading, setUploading] = useState(false);
   const [busyId, setBusyId] = useState<string | null>(null);
+  const [bundling, setBundling] = useState(false);
   const fileRef = useRef<HTMLInputElement>(null);
 
   const load = useCallback(async () => {
@@ -62,15 +69,39 @@ export function JobAssets({ jobId }: { jobId: string }) {
     }
   }
 
+  async function downloadBundle() {
+    setBundling(true);
+    setError(null);
+    try {
+      await assetsApi.downloadBundle(jobId);
+    } catch (err) {
+      setError(err instanceof StudioApiError ? err.message : "Couldn't build the bundle.");
+    } finally {
+      setBundling(false);
+    }
+  }
+
   return (
     <div className="rounded-2xl border border-neutral-border bg-neutral-surface p-6">
-      <div className="mb-4 flex items-center justify-between">
+      <div className="mb-4 flex flex-wrap items-center justify-between gap-2">
         <h3 className="text-[15px] font-medium text-ink">Files</h3>
-        <label className="inline-flex cursor-pointer items-center gap-1.5 rounded-md border border-neutral-strong px-3 py-1.5 text-[12px] font-medium text-content-secondary transition-colors hover:bg-neutral-surface2 hover:text-ink">
-          {uploading ? <Loader2 size={14} className="animate-spin" /> : <Upload size={14} />}
-          <span>{uploading ? "Uploading…" : "Upload file"}</span>
-          <input ref={fileRef} type="file" className="hidden" onChange={onPick} disabled={uploading} />
-        </label>
+        <div className="flex items-center gap-2">
+          <button
+            type="button"
+            onClick={downloadBundle}
+            disabled={bundling}
+            className="inline-flex items-center gap-1.5 rounded-md bg-primary px-3 py-1.5 text-[12px] font-medium text-white transition-colors hover:bg-primary-hover disabled:opacity-60"
+            title="Download brief + all files as a ZIP for local build"
+          >
+            {bundling ? <Loader2 size={14} className="animate-spin" /> : <Download size={14} />}
+            <span>{bundling ? "Building…" : "Download bundle"}</span>
+          </button>
+          <label className="inline-flex cursor-pointer items-center gap-1.5 rounded-md border border-neutral-strong px-3 py-1.5 text-[12px] font-medium text-content-secondary transition-colors hover:bg-neutral-surface2 hover:text-ink">
+            {uploading ? <Loader2 size={14} className="animate-spin" /> : <Upload size={14} />}
+            <span>{uploading ? "Uploading…" : "Upload file"}</span>
+            <input ref={fileRef} type="file" className="hidden" onChange={onPick} disabled={uploading} />
+          </label>
+        </div>
       </div>
 
       {error && <p className="mb-3 rounded-md border border-danger/20 bg-danger-bg px-3 py-2 text-[12px] text-danger">{error}</p>}
