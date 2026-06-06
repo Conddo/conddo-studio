@@ -13,6 +13,7 @@ import { getAccessToken } from "@/lib/auth";
 import { refreshAccessToken } from "@/lib/api";
 import { roleLabel, initialsOf } from "@/lib/format";
 import { NotificationsBell } from "@/components/app/NotificationsBell";
+import { InstallAppButton } from "@/components/app/InstallAppButton";
 import { studioEvents } from "@/lib/sse";
 import type { Role, Staff } from "@/types";
 
@@ -81,6 +82,12 @@ function SidebarBody({ pathname, staff, onNavigate, onLogout }: {
       </nav>
 
       <div className="border-t border-neutral-border px-4 py-4">
+        {/* Install CTA — only renders when Chromium has the prompt ready
+            and the app isn't already installed. The wrapper collapses
+            when the button hides so we don't leave dead vertical space. */}
+        <div className="mb-3 [&:empty]:hidden">
+          <InstallAppButton />
+        </div>
         <div className="flex items-center gap-3">
           <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-primary-bg font-mono text-[12px] font-medium text-primary-light">
             {initialsOf(staff?.name ?? staff?.email ?? "?")}
