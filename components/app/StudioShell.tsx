@@ -5,7 +5,7 @@ import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import {
   Home, Briefcase, List, BarChart3, CheckCircle2, Activity,
-  Users, LogOut, Menu, Tag, BookOpen, Building2, UserCog, type LucideIcon,
+  Users, LogOut, Menu, Tag, BookOpen, Building2, UserCog, Globe, type LucideIcon,
 } from "lucide-react";
 import { useApiQuery } from "@/hooks/useApiQuery";
 import { meQuery, logout } from "@/lib/account";
@@ -42,6 +42,11 @@ const LEAD: NavItem[] = [
 const ADMIN_EXTRAS: NavItem[] = [
   { label: "Platform Tenants", href: "/admin/platform/tenants", icon: Building2 },
   { label: "Platform Users", href: "/admin/platform/users", icon: UserCog },
+  // Platform Sites — register tenant_sites + issue Site API Keys
+  // (SITE_REGISTRATION_ADMIN_SPEC.md). Listed under ADMIN extras but
+  // BE allows TEAM_LEAD + QA_REVIEWER read-only / partial write — they
+  // can reach it via direct URL, just doesn't surface in their sidebar.
+  { label: "Platform Sites", href: "/admin/platform/sites", icon: Globe },
 ];
 
 const navFor = (role?: Role): NavItem[] => {
