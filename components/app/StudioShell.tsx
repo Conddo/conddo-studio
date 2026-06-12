@@ -5,7 +5,7 @@ import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import {
   Home, Briefcase, List, BarChart3, CheckCircle2, Activity,
-  Users, LogOut, Menu, Tag, BookOpen, Building2, UserCog, Globe, type LucideIcon,
+  Users, LogOut, Menu, Tag, BookOpen, Building2, UserCog, Globe, ShieldCheck, type LucideIcon,
 } from "lucide-react";
 import { useApiQuery } from "@/hooks/useApiQuery";
 import { meQuery, logout } from "@/lib/account";
@@ -47,6 +47,10 @@ const ADMIN_EXTRAS: NavItem[] = [
   // BE allows TEAM_LEAD + QA_REVIEWER read-only / partial write — they
   // can reach it via direct URL, just doesn't surface in their sidebar.
   { label: "Platform Sites", href: "/admin/platform/sites", icon: Globe },
+  // Beta Access Requests — cross-tenant feature-flag review. ADMIN only
+  // because granting beta access is a write to the shared tenant_feature_flags
+  // table. TEAM_LEAD can still reach the URL for read-only visibility.
+  { label: "Beta Access", href: "/admin/platform/feature-flags", icon: ShieldCheck },
 ];
 
 const navFor = (role?: Role): NavItem[] => {
