@@ -7,9 +7,25 @@ import { useApiQuery } from "@/hooks/useApiQuery";
 import { internalOpsApi, type RoadmapDashboard, type RoadmapItem } from "@/lib/internalOps";
 
 export default function RoadmapPage() {
-  const { data: dashboard } = useApiQuery(internalOpsApi.roadmapDashboard);
+  const { data: dashboard, refetch } = useApiQuery(internalOpsApi.roadmapDashboard);
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [editingItem, setEditingItem] = useState<RoadmapItem | null>(null);
+  const [formData, setFormData] = useState<Partial<RoadmapItem>>({
+    title: "",
+    description: "",
+    category: "PRODUCT",
+    priority: "MEDIUM",
+    status: "PLANNED",
+    targetDate: "",
+    startDate: "",
+    quarter: "",
+    estimatedHours: undefined,
+    actualHours: undefined,
+    assignedTo: "",
+    dependencies: "",
+    successCriteria: "",
+    notes: "",
+  });
 
   const getStatusColor = (status: string) => {
     switch (status) {
@@ -55,6 +71,74 @@ export default function RoadmapPage() {
       case "SECURITY": return "bg-red-100 text-red-700";
       default: return "bg-gray-100 text-gray-700";
     }
+  };
+
+  const handleCreate = async () => {
+    try {
+      await internalOpsApi.createRoadmapItem(formData as RoadmapItem);
+      setShowCreateModal(false);
+      setFormData({
+        title: "",
+        description: "",
+        category: "PRODUCT",
+        priority: "MEDIUM",
+        status: "PLANNED",
+        targetDate: "",
+        startDate: "",
+        quarter: "",
+        estimatedHours: undefined,
+        actualHours: undefined,
+        assignedTo: "",
+        dependencies: "",
+        successCriteria: "",
+        notes: "",
+      });
+      refetch();
+    } catch (error) {
+      console.error("Failed to create roadmap item:", error);
+    }
+  };
+
+  const handleUpdate = async () => {
+    if (!editingItem?.id) return;
+    try {
+      await internalOpsApi.updateRoadmapItem(editingItem.id, formData);
+      setEditingItem(null);
+      setFormData({
+        title: "",
+        description: "",
+        category: "PRODUCT",
+        priority: "MEDIUM",
+        status: "PLANNED",
+        targetDate: "",
+        startDate: "",
+        quarter: "",
+        estimatedHours: undefined,
+        actualHours: undefined,
+        assignedTo: "",
+        dependencies: "",
+        successCriteria: "",
+        notes: "",
+      });
+      refetch();
+    } catch (error) {
+      console.error("Failed to update roadmap item:", error);
+    }
+  };
+
+  const handleDelete = async (id: number) => {
+    if (!confirm("Are you sure you want to delete this roadmap item?")) return;
+    try {
+      await internalOpsApi.deleteRoadmapItem(id);
+      refetch();
+    } catch (error) {
+      console.error("Failed to delete roadmap item:", error);
+    }
+  };
+
+  const openEditModal = (item: RoadmapItem) => {
+    setEditingItem(item);
+    setFormData(item);
   };
 
   return (
@@ -167,13 +251,14 @@ export default function RoadmapPage() {
                     </div>
                     <div className="flex items-center gap-2">
                       <button 
-                        onClick={() => setEditingItem(item)}
+                        onClick={() => openEditModal(item)}
                         className="inline-flex h-8 w-8 items-center justify-center rounded-md text-content-secondary hover:bg-neutral-surface2 hover:text-ink"
                         title="Edit"
                       >
                         <Edit2 size={14} />
                       </button>
                       <button 
+                        onClick={() => item.id && handleDelete(item.id)}
                         className="inline-flex h-8 w-8 items-center justify-center rounded-md text-content-secondary hover:bg-red-50 hover:text-red-600"
                         title="Delete"
                       >
@@ -236,38 +321,222 @@ export default function RoadmapPage() {
       </div>
 
       {/* Create/Edit Modal */}
-      {showCreateModal && (
+      {(showCreateModal || editingItem) && (
         <div className="fixed inset-0 z-50 flex items-center justify-center">
-          <div className="absolute inset-0 bg-black/60" onClick={() => setShowCreateModal(false)} />
-          <div className="relative z-10 w-full max-w-lg rounded-xl border border-neutral-border bg-neutral-surface p-6">
+          <div className="absolute inset-0 bg-black/60" onClick={() => {
+            setShowCreateModal(false);
+            setEditingItem(null);
+          }} />
+          <div className="relative z-10 w-full max-w-lg max-h-[90vh] overflow-y-auto rounded-xl border border-neutral-border bg-neutral-surface p-6">
             <div className="mb-4 flex items-center justify-between">
-              <h3 className="text-[16px] font-semibold text-ink">Add Roadmap Item</h3>
+              <h3 className="text-[16px] font-semibold text-ink">
+                {editingItem ? "Edit Roadmap Item" : "Add Roadmap Item"}
+              </h3>
               <button 
-                onClick={() => setShowCreateModal(false)}
+                onClick={() => {
+                  setShowCreateModal(false);
+                  setEditingItem(null);
+                }}
                 className="inline-flex h-8 w-8 items-center justify-center rounded-md text-content-secondary hover:bg-neutral-surface2 hover:text-ink"
               >
                 <X size={18} />
               </button>
             </div>
-            <p className="text-[13px] text-content-secondary">CRUD functionality coming soon</p>
-          </div>
-        </div>
-      )}
+            
+            <div className="space-y-4">
+              <div>
+                <label className="mb-1 block text-[12px] font-medium text-ink">Title</label>
+                <input
+                  type="text"
+                  value={formData.title}
+                  onChange={(e) => setFormData({ ...formData, title: e.target.value })}
+                  className="w-full rounded-lg border border-neutral-border bg-neutral-bg px-3 py-2 text-[13px] text-ink placeholder:text-content-muted focus:border-primary focus:outline-none"
+                  placeholder="Enter title"
+                />
+              </div>
 
-      {editingItem && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center">
-          <div className="absolute inset-0 bg-black/60" onClick={() => setEditingItem(null)} />
-          <div className="relative z-10 w-full max-w-lg rounded-xl border border-neutral-border bg-neutral-surface p-6">
-            <div className="mb-4 flex items-center justify-between">
-              <h3 className="text-[16px] font-semibold text-ink">Edit Roadmap Item</h3>
-              <button 
-                onClick={() => setEditingItem(null)}
-                className="inline-flex h-8 w-8 items-center justify-center rounded-md text-content-secondary hover:bg-neutral-surface2 hover:text-ink"
-              >
-                <X size={18} />
-              </button>
+              <div>
+                <label className="mb-1 block text-[12px] font-medium text-ink">Description</label>
+                <textarea
+                  value={formData.description}
+                  onChange={(e) => setFormData({ ...formData, description: e.target.value })}
+                  className="w-full rounded-lg border border-neutral-border bg-neutral-bg px-3 py-2 text-[13px] text-ink placeholder:text-content-muted focus:border-primary focus:outline-none"
+                  rows={3}
+                  placeholder="Enter description"
+                />
+              </div>
+
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="mb-1 block text-[12px] font-medium text-ink">Category</label>
+                  <select
+                    value={formData.category}
+                    onChange={(e) => setFormData({ ...formData, category: e.target.value as any })}
+                    className="w-full rounded-lg border border-neutral-border bg-neutral-bg px-3 py-2 text-[13px] text-ink focus:border-primary focus:outline-none"
+                  >
+                    <option value="PRODUCT">Product</option>
+                    <option value="ENGINEERING">Engineering</option>
+                    <option value="DESIGN">Design</option>
+                    <option value="MARKETING">Marketing</option>
+                    <option value="SALES">Sales</option>
+                    <option value="OPERATIONS">Operations</option>
+                    <option value="INFRASTRUCTURE">Infrastructure</option>
+                    <option value="SECURITY">Security</option>
+                  </select>
+                </div>
+
+                <div>
+                  <label className="mb-1 block text-[12px] font-medium text-ink">Priority</label>
+                  <select
+                    value={formData.priority}
+                    onChange={(e) => setFormData({ ...formData, priority: e.target.value as any })}
+                    className="w-full rounded-lg border border-neutral-border bg-neutral-bg px-3 py-2 text-[13px] text-ink focus:border-primary focus:outline-none"
+                  >
+                    <option value="CRITICAL">Critical</option>
+                    <option value="HIGH">High</option>
+                    <option value="MEDIUM">Medium</option>
+                    <option value="LOW">Low</option>
+                  </select>
+                </div>
+              </div>
+
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="mb-1 block text-[12px] font-medium text-ink">Status</label>
+                  <select
+                    value={formData.status}
+                    onChange={(e) => setFormData({ ...formData, status: e.target.value as any })}
+                    className="w-full rounded-lg border border-neutral-border bg-neutral-bg px-3 py-2 text-[13px] text-ink focus:border-primary focus:outline-none"
+                  >
+                    <option value="PLANNED">Planned</option>
+                    <option value="IN_PROGRESS">In Progress</option>
+                    <option value="BLOCKED">Blocked</option>
+                    <option value="COMPLETED">Completed</option>
+                    <option value="CANCELLED">Cancelled</option>
+                    <option value="DEFERRED">Deferred</option>
+                  </select>
+                </div>
+
+                <div>
+                  <label className="mb-1 block text-[12px] font-medium text-ink">Quarter</label>
+                  <input
+                    type="text"
+                    value={formData.quarter}
+                    onChange={(e) => setFormData({ ...formData, quarter: e.target.value })}
+                    className="w-full rounded-lg border border-neutral-border bg-neutral-bg px-3 py-2 text-[13px] text-ink placeholder:text-content-muted focus:border-primary focus:outline-none"
+                    placeholder="e.g., Q1 2024"
+                  />
+                </div>
+              </div>
+
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="mb-1 block text-[12px] font-medium text-ink">Start Date</label>
+                  <input
+                    type="date"
+                    value={formData.startDate}
+                    onChange={(e) => setFormData({ ...formData, startDate: e.target.value })}
+                    className="w-full rounded-lg border border-neutral-border bg-neutral-bg px-3 py-2 text-[13px] text-ink focus:border-primary focus:outline-none"
+                  />
+                </div>
+
+                <div>
+                  <label className="mb-1 block text-[12px] font-medium text-ink">Target Date</label>
+                  <input
+                    type="date"
+                    value={formData.targetDate}
+                    onChange={(e) => setFormData({ ...formData, targetDate: e.target.value })}
+                    className="w-full rounded-lg border border-neutral-border bg-neutral-bg px-3 py-2 text-[13px] text-ink focus:border-primary focus:outline-none"
+                  />
+                </div>
+              </div>
+
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="mb-1 block text-[12px] font-medium text-ink">Estimated Hours</label>
+                  <input
+                    type="number"
+                    value={formData.estimatedHours || ""}
+                    onChange={(e) => setFormData({ ...formData, estimatedHours: e.target.value ? Number(e.target.value) : undefined })}
+                    className="w-full rounded-lg border border-neutral-border bg-neutral-bg px-3 py-2 text-[13px] text-ink placeholder:text-content-muted focus:border-primary focus:outline-none"
+                    placeholder="0"
+                  />
+                </div>
+
+                <div>
+                  <label className="mb-1 block text-[12px] font-medium text-ink">Actual Hours</label>
+                  <input
+                    type="number"
+                    value={formData.actualHours || ""}
+                    onChange={(e) => setFormData({ ...formData, actualHours: e.target.value ? Number(e.target.value) : undefined })}
+                    className="w-full rounded-lg border border-neutral-border bg-neutral-bg px-3 py-2 text-[13px] text-ink placeholder:text-content-muted focus:border-primary focus:outline-none"
+                    placeholder="0"
+                  />
+                </div>
+              </div>
+
+              <div>
+                <label className="mb-1 block text-[12px] font-medium text-ink">Assigned To</label>
+                <input
+                  type="text"
+                  value={formData.assignedTo}
+                  onChange={(e) => setFormData({ ...formData, assignedTo: e.target.value })}
+                  className="w-full rounded-lg border border-neutral-border bg-neutral-bg px-3 py-2 text-[13px] text-ink placeholder:text-content-muted focus:border-primary focus:outline-none"
+                  placeholder="Enter assignee"
+                />
+              </div>
+
+              <div>
+                <label className="mb-1 block text-[12px] font-medium text-ink">Dependencies</label>
+                <textarea
+                  value={formData.dependencies}
+                  onChange={(e) => setFormData({ ...formData, dependencies: e.target.value })}
+                  className="w-full rounded-lg border border-neutral-border bg-neutral-bg px-3 py-2 text-[13px] text-ink placeholder:text-content-muted focus:border-primary focus:outline-none"
+                  rows={2}
+                  placeholder="Enter dependencies"
+                />
+              </div>
+
+              <div>
+                <label className="mb-1 block text-[12px] font-medium text-ink">Success Criteria</label>
+                <textarea
+                  value={formData.successCriteria}
+                  onChange={(e) => setFormData({ ...formData, successCriteria: e.target.value })}
+                  className="w-full rounded-lg border border-neutral-border bg-neutral-bg px-3 py-2 text-[13px] text-ink placeholder:text-content-muted focus:border-primary focus:outline-none"
+                  rows={2}
+                  placeholder="Enter success criteria"
+                />
+              </div>
+
+              <div>
+                <label className="mb-1 block text-[12px] font-medium text-ink">Notes</label>
+                <textarea
+                  value={formData.notes}
+                  onChange={(e) => setFormData({ ...formData, notes: e.target.value })}
+                  className="w-full rounded-lg border border-neutral-border bg-neutral-bg px-3 py-2 text-[13px] text-ink placeholder:text-content-muted focus:border-primary focus:outline-none"
+                  rows={2}
+                  placeholder="Enter notes"
+                />
+              </div>
+
+              <div className="flex gap-3 pt-4">
+                <button
+                  onClick={editingItem ? handleUpdate : handleCreate}
+                  className="flex-1 rounded-lg bg-blue-500 px-4 py-2 text-[13px] font-medium text-white hover:bg-blue-600"
+                >
+                  {editingItem ? "Update" : "Create"}
+                </button>
+                <button
+                  onClick={() => {
+                    setShowCreateModal(false);
+                    setEditingItem(null);
+                  }}
+                  className="flex-1 rounded-lg border border-neutral-border bg-neutral-surface px-4 py-2 text-[13px] font-medium text-ink hover:bg-neutral-bg"
+                >
+                  Cancel
+                </button>
+              </div>
             </div>
-            <p className="text-[13px] text-content-secondary">CRUD functionality coming soon</p>
           </div>
         </div>
       )}
