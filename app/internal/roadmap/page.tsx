@@ -1,13 +1,15 @@
 "use client";
 
-import { MapPin, Calendar, AlertTriangle, CheckCircle, Clock, Plus, Filter } from "lucide-react";
+import { useState } from "react";
+import { MapPin, Calendar, AlertTriangle, CheckCircle, Clock, Plus, Filter, X, Edit2, Trash2 } from "lucide-react";
 import { StudioShell } from "@/components/app/StudioShell";
 import { useApiQuery } from "@/hooks/useApiQuery";
 import { internalOpsApi, type RoadmapDashboard, type RoadmapItem } from "@/lib/internalOps";
 
 export default function RoadmapPage() {
-  const { data: dashboard, loading, error, refetch } = 
-    useApiQuery(internalOpsApi.roadmapDashboard);
+  const { data: dashboard } = useApiQuery(internalOpsApi.roadmapDashboard);
+  const [showCreateModal, setShowCreateModal] = useState(false);
+  const [editingItem, setEditingItem] = useState<RoadmapItem | null>(null);
 
   const getStatusColor = (status: string) => {
     switch (status) {
@@ -56,7 +58,19 @@ export default function RoadmapPage() {
   };
 
   return (
-    <StudioShell title="Product Roadmap" subtitle="Strategic planning and milestone tracking for Conddo.">
+    <StudioShell 
+      title="Product Roadmap" 
+      subtitle="Strategic planning and milestone tracking for Conddo."
+      actions={
+        <button 
+          onClick={() => setShowCreateModal(true)}
+          className="flex items-center gap-2 rounded-lg bg-blue-500 px-4 py-2 text-[13px] font-medium text-white hover:bg-blue-600"
+        >
+          <Plus size={16} />
+          Add Item
+        </button>
+      }
+    >
       <div className="space-y-6">
         {/* Status Counts */}
         <section>
@@ -65,10 +79,6 @@ export default function RoadmapPage() {
               <MapPin size={17} />
               Overview
             </h2>
-            <button className="flex items-center gap-2 rounded-lg bg-blue-500 px-4 py-2 text-[13px] font-medium text-white hover:bg-blue-600">
-              <Plus size={16} />
-              Add Item
-            </button>
           </div>
 
           <div className="mb-6 grid grid-cols-1 gap-4 sm:grid-cols-4">
@@ -155,16 +165,31 @@ export default function RoadmapPage() {
                         <p className="mt-2 text-[11px] text-content-muted">Assigned to: {item.assignedTo}</p>
                       )}
                     </div>
-                    <div className="text-right">
-                      <p className="text-[11px] text-content-muted">Target</p>
-                      <p className="font-mono text-[12px] text-ink">
-                        {new Date(item.targetDate).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })}
-                      </p>
-                      {item.estimatedHours && (
-                        <p className="mt-1 text-[11px] text-content-muted">
-                          {item.estimatedHours}h est.
+                    <div className="flex items-center gap-2">
+                      <button 
+                        onClick={() => setEditingItem(item)}
+                        className="inline-flex h-8 w-8 items-center justify-center rounded-md text-content-secondary hover:bg-neutral-surface2 hover:text-ink"
+                        title="Edit"
+                      >
+                        <Edit2 size={14} />
+                      </button>
+                      <button 
+                        className="inline-flex h-8 w-8 items-center justify-center rounded-md text-content-secondary hover:bg-red-50 hover:text-red-600"
+                        title="Delete"
+                      >
+                        <Trash2 size={14} />
+                      </button>
+                      <div className="text-right">
+                        <p className="text-[11px] text-content-muted">Target</p>
+                        <p className="font-mono text-[12px] text-ink">
+                          {new Date(item.targetDate).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })}
                         </p>
-                      )}
+                        {item.estimatedHours && (
+                          <p className="mt-1 text-[11px] text-content-muted">
+                            {item.estimatedHours}h est.
+                          </p>
+                        )}
+                      </div>
                     </div>
                   </div>
                 ))}
@@ -209,6 +234,43 @@ export default function RoadmapPage() {
           </section>
         )}
       </div>
+
+      {/* Create/Edit Modal */}
+      {showCreateModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center">
+          <div className="absolute inset-0 bg-black/60" onClick={() => setShowCreateModal(false)} />
+          <div className="relative z-10 w-full max-w-lg rounded-xl border border-neutral-border bg-neutral-surface p-6">
+            <div className="mb-4 flex items-center justify-between">
+              <h3 className="text-[16px] font-semibold text-ink">Add Roadmap Item</h3>
+              <button 
+                onClick={() => setShowCreateModal(false)}
+                className="inline-flex h-8 w-8 items-center justify-center rounded-md text-content-secondary hover:bg-neutral-surface2 hover:text-ink"
+              >
+                <X size={18} />
+              </button>
+            </div>
+            <p className="text-[13px] text-content-secondary">CRUD functionality coming soon</p>
+          </div>
+        </div>
+      )}
+
+      {editingItem && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center">
+          <div className="absolute inset-0 bg-black/60" onClick={() => setEditingItem(null)} />
+          <div className="relative z-10 w-full max-w-lg rounded-xl border border-neutral-border bg-neutral-surface p-6">
+            <div className="mb-4 flex items-center justify-between">
+              <h3 className="text-[16px] font-semibold text-ink">Edit Roadmap Item</h3>
+              <button 
+                onClick={() => setEditingItem(null)}
+                className="inline-flex h-8 w-8 items-center justify-center rounded-md text-content-secondary hover:bg-neutral-surface2 hover:text-ink"
+              >
+                <X size={18} />
+              </button>
+            </div>
+            <p className="text-[13px] text-content-secondary">CRUD functionality coming soon</p>
+          </div>
+        </div>
+      )}
     </StudioShell>
   );
 }
