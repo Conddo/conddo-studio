@@ -24,16 +24,6 @@ export default function WeeklyReviewsPage() {
     return `${(value * 100).toFixed(1)}%`;
   };
 
-  if (!latest && !reviews) {
-    return (
-      <StudioShell title="Weekly Metric Reviews" subtitle="Weekly performance tracking and analysis for Conddo.">
-        <div className="space-y-6">
-          <p className="text-[13px] text-content-secondary">Loading...</p>
-        </div>
-      </StudioShell>
-    );
-  }
-
   return (
     <StudioShell title="Weekly Metric Reviews" subtitle="Weekly performance tracking and analysis for Conddo.">
       <div className="space-y-6">
@@ -51,135 +41,49 @@ export default function WeeklyReviewsPage() {
           </div>
 
           {latest ? (
-            <>
-              <div className="mb-6 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
-                <div className="rounded-xl border border-neutral-border bg-neutral-surface p-5">
-                  <div className="mb-2 flex items-center gap-2">
-                    <DollarSign size={14} className="text-content-muted" />
-                    <p className="text-[12px] text-content-secondary">Cash Balance</p>
-                  </div>
-                  <p className="font-mono text-[24px] font-semibold leading-none text-ink">
-                    {formatCurrency(latest.cashBalance)}
-                  </p>
+            <div className="mb-6 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
+              <div className="rounded-xl border border-neutral-border bg-neutral-surface p-5">
+                <div className="mb-2 flex items-center gap-2">
+                  <DollarSign size={14} className="text-content-muted" />
+                  <p className="text-[12px] text-content-secondary">Cash Balance</p>
                 </div>
-
-                <div className="rounded-xl border border-neutral-border bg-neutral-surface p-5">
-                  <div className="mb-2 flex items-center gap-2">
-                    <TrendingUp size={14} className="text-content-muted" />
-                    <p className="text-[12px] text-content-secondary">Net Burn Rate</p>
-                  </div>
-                  <p className="font-mono text-[24px] font-semibold leading-none text-ink">
-                    {formatCurrency(latest.netBurnRate)}
-                    <span className="text-[12px] text-content-muted">/mo</span>
-                  </p>
-                </div>
-
-                <div className="rounded-xl border border-neutral-border bg-neutral-surface p-5">
-                  <div className="mb-2 flex items-center gap-2">
-                    <Calendar size={14} className="text-content-muted" />
-                    <p className="text-[12px] text-content-secondary">Cash Runway</p>
-                  </div>
-                  <p className="font-mono text-[24px] font-semibold leading-none text-ink">
-                    {latest.cashRunwayMonths ?? "—"}
-                    <span className="text-[12px]"> months</span>
-                  </p>
-                </div>
-
-                <div className="rounded-xl border border-neutral-border bg-neutral-surface p-5">
-                  <div className="mb-2 flex items-center gap-2">
-                    <DollarSign size={14} className="text-content-muted" />
-                    <p className="text-[12px] text-content-secondary">MRR</p>
-                  </div>
-                  <p className="font-mono text-[24px] font-semibold leading-none text-ink">
-                    {formatCurrency(latest.mrr)}
-                  </p>
-                </div>
+                <p className="font-mono text-[24px] font-semibold leading-none text-ink">
+                  {formatCurrency(latest.cashBalance)}
+                </p>
               </div>
 
-              <div className="mb-6 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
-                <div className="rounded-xl border border-neutral-border bg-neutral-surface p-5">
-                  <div className="mb-2 flex items-center gap-2">
-                    <Users size={14} className="text-content-muted" />
-                    <p className="text-[12px] text-content-secondary">Total Customers</p>
-                  </div>
-                  <p className="font-mono text-[24px] font-semibold leading-none text-ink">
-                    {latest.totalCustomers ?? "—"}
-                  </p>
+              <div className="rounded-xl border border-neutral-border bg-neutral-surface p-5">
+                <div className="mb-2 flex items-center gap-2">
+                  <TrendingUp size={14} className="text-content-muted" />
+                  <p className="text-[12px] text-content-secondary">Net Burn Rate</p>
                 </div>
-
-                <div className="rounded-xl border border-neutral-border bg-neutral-surface p-5">
-                  <div className="mb-2 flex items-center gap-2">
-                    <CheckCircle size={14} className="text-green-500" />
-                    <p className="text-[12px] text-content-secondary">New This Week</p>
-                  </div>
-                  <p className="font-mono text-[24px] font-semibold leading-none text-green-600">
-                    +{latest.newCustomersThisWeek ?? 0}
-                  </p>
-                </div>
-
-                <div className="rounded-xl border border-neutral-border bg-neutral-surface p-5">
-                  <div className="mb-2 flex items-center gap-2">
-                    <AlertTriangle size={14} className="text-red-500" />
-                    <p className="text-[12px] text-content-secondary">Churned This Week</p>
-                  </div>
-                  <p className="font-mono text-[24px] font-semibold leading-none text-red-600">
-                    -{latest.churnedCustomersThisWeek ?? 0}
-                  </p>
-                </div>
-
-                <div className="rounded-xl border border-neutral-border bg-neutral-surface p-5">
-                  <div className="mb-2 flex items-center gap-2">
-                    <TrendingUp size={14} className="text-content-muted" />
-                    <p className="text-[12px] text-content-secondary">NRR</p>
-                  </div>
-                  <p className="font-mono text-[24px] font-semibold leading-none text-ink">
-                    {formatPercent(latest.netRevenueRetention)}
-                  </p>
-                </div>
+                <p className="font-mono text-[24px] font-semibold leading-none text-ink">
+                  {formatCurrency(latest.netBurnRate)}
+                  <span className="text-[12px] text-content-muted">/mo</span>
+                </p>
               </div>
 
-              <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-                {latest.highlights && (
-                  <div className="rounded-xl border border-green-200 bg-green-50 p-5">
-                    <h3 className="mb-3 flex items-center gap-2 text-[14px] font-medium text-green-800">
-                      <CheckCircle size={16} />
-                      Highlights
-                    </h3>
-                    <p className="text-[13px] text-green-900">{latest.highlights}</p>
-                  </div>
-                )}
-
-                {latest.concerns && (
-                  <div className="rounded-xl border border-red-200 bg-red-50 p-5">
-                    <h3 className="mb-3 flex items-center gap-2 text-[14px] font-medium text-red-800">
-                      <AlertTriangle size={16} />
-                      Concerns
-                    </h3>
-                    <p className="text-[13px] text-red-900">{latest.concerns}</p>
-                  </div>
-                )}
-
-                {latest.keyLearnings && (
-                  <div className="rounded-xl border border-blue-200 bg-blue-50 p-5">
-                    <h3 className="mb-3 flex items-center gap-2 text-[14px] font-medium text-blue-800">
-                      <TrendingUp size={16} />
-                      Key Learnings
-                    </h3>
-                    <p className="text-[13px] text-blue-900">{latest.keyLearnings}</p>
-                  </div>
-                )}
-
-                {latest.actionItems && (
-                  <div className="rounded-xl border border-purple-200 bg-purple-50 p-5">
-                    <h3 className="mb-3 flex items-center gap-2 text-[14px] font-medium text-purple-800">
-                      <Calendar size={16} />
-                      Action Items
-                    </h3>
-                    <p className="text-[13px] text-purple-900">{latest.actionItems}</p>
-                  </div>
-                )}
+              <div className="rounded-xl border border-neutral-border bg-neutral-surface p-5">
+                <div className="mb-2 flex items-center gap-2">
+                  <Calendar size={14} className="text-content-muted" />
+                  <p className="text-[12px] text-content-secondary">Cash Runway</p>
+                </div>
+                <p className="font-mono text-[24px] font-semibold leading-none text-ink">
+                  {latest.cashRunwayMonths ?? "—"}
+                  <span className="text-[12px]"> months</span>
+                </p>
               </div>
-            </>
+
+              <div className="rounded-xl border border-neutral-border bg-neutral-surface p-5">
+                <div className="mb-2 flex items-center gap-2">
+                  <DollarSign size={14} className="text-content-muted" />
+                  <p className="text-[12px] text-content-secondary">MRR</p>
+                </div>
+                <p className="font-mono text-[24px] font-semibold leading-none text-ink">
+                  {formatCurrency(latest.mrr)}
+                </p>
+              </div>
+            </div>
           ) : (
             <p className="text-[13px] text-content-secondary">No weekly review data available</p>
           )}
