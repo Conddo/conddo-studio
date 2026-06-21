@@ -24,6 +24,16 @@ export default function WeeklyReviewsPage() {
     return `${(value * 100).toFixed(1)}%`;
   };
 
+  if (!latest && !reviews) {
+    return (
+      <StudioShell title="Weekly Metric Reviews" subtitle="Weekly performance tracking and analysis for Conddo.">
+        <div className="space-y-6">
+          <p className="text-[13px] text-content-secondary">Loading...</p>
+        </div>
+      </StudioShell>
+    );
+  }
+
   return (
     <StudioShell title="Weekly Metric Reviews" subtitle="Weekly performance tracking and analysis for Conddo.">
       <div className="space-y-6">
@@ -111,7 +121,7 @@ export default function WeeklyReviewsPage() {
                 <div className="mb-2 flex items-center gap-2">
                   <AlertTriangle size={14} className="text-red-500" />
                   <p className="text-[12px] text-content-secondary">Churned This Week</p>
-                </p>
+                </div>
                 <p className="font-mono text-[24px] font-semibold leading-none text-red-600">
                   -{latest.churnedCustomersThisWeek ?? 0}
                 </p>
