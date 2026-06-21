@@ -239,3 +239,162 @@ export type JobDetail = {
   qaReviews: QaReview[];
   createdAt: string;
 };
+
+// ----- Internal Operations (Financial Metrics, Accounting, Activities) -----
+
+export type FinancialMetrics = {
+  id?: number;
+  month: string; // YearMonth format "2024-01"
+  cashBalance?: number;
+  grossBurnRate?: number;
+  netBurnRate?: number;
+  cashRunwayMonths?: number;
+  zeroCashDate?: string;
+  mrr?: number;
+  arr?: number;
+  newMrr?: number;
+  churnedMrr?: number;
+  expansionMrr?: number;
+  totalCustomers?: number;
+  newCustomers?: number;
+  churnedCustomers?: number;
+  cac?: number;
+  ltv?: number;
+  ltvToCacRatio?: number;
+  cacPaybackMonths?: number;
+  netRevenueRetention?: number;
+  grossRevenueRetention?: number;
+  createdAt?: string;
+  updatedAt?: string;
+};
+
+export type AccountingEntry = {
+  id?: number;
+  entryNumber?: string;
+  type: "REVENUE" | "EXPENSE" | "CASH_IN" | "CASH_OUT" | "ACCRUAL" | "DEFERRAL";
+  category: "SUBSCRIPTION" | "ONE_TIME" | "EXPANSION" | "SERVICE" | "PAYROLL" | "INFRASTRUCTURE" | "MARKETING" | "SALES" | "LEGAL" | "OFFICE" | "SOFTWARE" | "INVESTMENT" | "LOAN" | "GRANT" | "REFUND" | "PAYMENT";
+  description: string;
+  amount: number;
+  entryDate: string;
+  recognizedDate?: string;
+  relatedEntity?: string;
+  reference?: string;
+  status: string;
+  notes?: string;
+  createdAt?: string;
+  updatedAt?: string;
+};
+
+export type OperationalActivity = {
+  id?: number;
+  title: string;
+  description: string;
+  category: "PRODUCT" | "ENGINEERING" | "SALES" | "MARKETING" | "OPERATIONS" | "FINANCE" | "HR" | "LEGAL";
+  status: "PLANNED" | "IN_PROGRESS" | "BLOCKED" | "COMPLETED" | "CANCELLED";
+  startDate?: string;
+  targetDate?: string;
+  completedDate?: string;
+  priority?: number;
+  assignedTo?: string;
+  tags?: string;
+  progressNotes?: string;
+  createdAt?: string;
+  updatedAt?: string;
+};
+
+export type FinancialSummary = {
+  cashBalance?: number;
+  netBurnRate?: number;
+  cashRunwayMonths?: number;
+  zeroCashDate?: string;
+  mrr?: number;
+  arr?: number;
+  ltvToCacRatio?: number;
+  netRevenueRetention?: number;
+  grossRevenueRetention?: number;
+  totalCustomers?: number;
+  month?: string;
+};
+
+export type AccountingSummary = {
+  totalRevenue: number;
+  totalExpenses: number;
+  cashIn: number;
+  cashOut: number;
+  netCashFlow: number;
+  period: { start: string; end: string };
+};
+
+export type ActivitiesDashboard = {
+  activeActivities: OperationalActivity[];
+  statusCounts: {
+    planned: number;
+    inProgress: number;
+    blocked: number;
+    completed: number;
+  };
+  recentlyCompleted: OperationalActivity[];
+};
+
+export type RoadmapItem = {
+  id?: number;
+  title: string;
+  description: string;
+  category: "PRODUCT" | "ENGINEERING" | "DESIGN" | "MARKETING" | "SALES" | "OPERATIONS" | "INFRASTRUCTURE" | "SECURITY";
+  priority: "CRITICAL" | "HIGH" | "MEDIUM" | "LOW";
+  status: "PLANNED" | "IN_PROGRESS" | "BLOCKED" | "COMPLETED" | "CANCELLED" | "DEFERRED";
+  targetDate: string;
+  startDate?: string;
+  completedDate?: string;
+  assignedTo?: string;
+  quarter?: string;
+  estimatedHours?: number;
+  actualHours?: number;
+  dependencies?: string;
+  successCriteria?: string;
+  notes?: string;
+  createdAt?: string;
+  updatedAt?: string;
+};
+
+export type WeeklyMetricReview = {
+  id?: number;
+  weekStartDate: string;
+  weekEndDate: string;
+  cashBalance?: number;
+  netBurnRate?: number;
+  cashRunwayMonths?: number;
+  mrr?: number;
+  arr?: number;
+  totalCustomers?: number;
+  newCustomersThisWeek?: number;
+  churnedCustomersThisWeek?: number;
+  cac?: number;
+  ltv?: number;
+  ltvToCacRatio?: number;
+  netRevenueRetention?: number;
+  activeUsers?: number;
+  dailyActiveUsers?: number;
+  newSignups?: number;
+  supportTickets?: number;
+  churnRate?: number;
+  highlights?: string;
+  concerns?: string;
+  keyLearnings?: string;
+  actionItems?: string;
+  blockers?: string;
+  reviewedBy?: string;
+  createdAt?: string;
+  updatedAt?: string;
+};
+
+export type RoadmapDashboard = {
+  activeItems: RoadmapItem[];
+  statusCounts: {
+    planned: number;
+    inProgress: number;
+    blocked: number;
+    completed: number;
+  };
+  recentlyCompleted: RoadmapItem[];
+};
