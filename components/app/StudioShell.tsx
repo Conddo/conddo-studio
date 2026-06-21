@@ -30,7 +30,10 @@ const QA: NavItem[] = [
 ];
 // LEAD nav — covers ops + Studio admin items both TEAM_LEAD and ADMIN can see.
 const LEAD: NavItem[] = [
+  { label: "Dashboard", href: "/dashboard", icon: Home },
   { label: "Internal Ops", href: "/internal", icon: Activity },
+  { label: "Roadmap", href: "/internal/roadmap", icon: Briefcase },
+  { label: "Weekly Reviews", href: "/internal/weekly-reviews", icon: BarChart3 },
   { label: "Operations", href: "/admin", icon: Briefcase },
   { label: "All Jobs", href: "/admin/jobs", icon: Briefcase },
   { label: "QA Queue", href: "/qa", icon: CheckCircle2 },
