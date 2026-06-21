@@ -6,9 +6,7 @@ import { useApiQuery } from "@/hooks/useApiQuery";
 import { internalOpsApi, type WeeklyMetricReview } from "@/lib/internalOps";
 
 export default function WeeklyReviewsPage() {
-  const { data: reviews, loading, error, refetch } = 
-    useApiQuery(internalOpsApi.weeklyReviews);
-
+  const { data: reviews } = useApiQuery(internalOpsApi.weeklyReviews);
   const { data: latest } = useApiQuery(internalOpsApi.latestWeeklyReview);
 
   const formatCurrency = (value?: number) => {
