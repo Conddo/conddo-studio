@@ -1,9 +1,10 @@
 "use client";
 
-import { DollarSign, TrendingUp, AlertTriangle, CheckCircle, Clock, Plus, MapPin, Calendar } from "lucide-react";
+import { useState } from "react";
+import { DollarSign, TrendingUp, AlertTriangle, CheckCircle, Clock, Plus, MapPin, Calendar, X, Edit2, Trash2 } from "lucide-react";
 import { StudioShell } from "@/components/app/StudioShell";
 import { useApiQuery } from "@/hooks/useApiQuery";
-import { internalOpsApi, type FinancialSummary, type ActivitiesDashboard } from "@/lib/internalOps";
+import { internalOpsApi, type FinancialSummary, type ActivitiesDashboard, type FinancialMetrics } from "@/lib/internalOps";
 import Link from "next/link";
 
 export default function InternalOpsPage() {
@@ -12,6 +13,33 @@ export default function InternalOpsPage() {
   
   const { data: activities, loading: activitiesLoading, error: activitiesError, refetch: refetchActivities } = 
     useApiQuery(internalOpsApi.activitiesDashboard);
+
+  const { data: financialHistory, refetch: refetchHistory } = useApiQuery(internalOpsApi.financialHistory);
+
+  const [showFinancialModal, setShowFinancialModal] = useState(false);
+  const [editingFinancial, setEditingFinancial] = useState<FinancialMetrics | null>(null);
+  const [financialFormData, setFinancialFormData] = useState<Partial<FinancialMetrics>>({
+    month: "",
+    cashBalance: undefined,
+    grossBurnRate: undefined,
+    netBurnRate: undefined,
+    cashRunwayMonths: undefined,
+    zeroCashDate: undefined,
+    mrr: undefined,
+    arr: undefined,
+    newMrr: undefined,
+    churnedMrr: undefined,
+    expansionMrr: undefined,
+    totalCustomers: undefined,
+    newCustomers: undefined,
+    churnedCustomers: undefined,
+    cac: undefined,
+    ltv: undefined,
+    ltvToCacRatio: undefined,
+    cacPaybackMonths: undefined,
+    netRevenueRetention: undefined,
+    grossRevenueRetention: undefined,
+  });
 
   const formatCurrency = (value?: number) => {
     if (value === undefined || value === null) return "—";
@@ -37,8 +65,103 @@ export default function InternalOpsPage() {
 
   const runwayStatus = getRunwayStatus(financial?.cashRunwayMonths);
 
+  const handleCreateFinancial = async () => {
+    try {
+      await internalOpsApi.createFinancialMetrics(financialFormData as FinancialMetrics);
+      setShowFinancialModal(false);
+      setFinancialFormData({
+        month: "",
+        cashBalance: undefined,
+        grossBurnRate: undefined,
+        netBurnRate: undefined,
+        cashRunwayMonths: undefined,
+        zeroCashDate: undefined,
+        mrr: undefined,
+        arr: undefined,
+        newMrr: undefined,
+        churnedMrr: undefined,
+        expansionMrr: undefined,
+        totalCustomers: undefined,
+        newCustomers: undefined,
+        churnedCustomers: undefined,
+        cac: undefined,
+        ltv: undefined,
+        ltvToCacRatio: undefined,
+        cacPaybackMonths: undefined,
+        netRevenueRetention: undefined,
+        grossRevenueRetention: undefined,
+      });
+      refetchFinancial();
+      refetchHistory();
+    } catch (error) {
+      console.error("Failed to create financial metrics:", error);
+    }
+  };
+
+  const handleUpdateFinancial = async () => {
+    if (!editingFinancial?.id) return;
+    try {
+      await internalOpsApi.updateFinancialMetrics(editingFinancial.id, financialFormData);
+      setEditingFinancial(null);
+      setFinancialFormData({
+        month: "",
+        cashBalance: undefined,
+        grossBurnRate: undefined,
+        netBurnRate: undefined,
+        cashRunwayMonths: undefined,
+        zeroCashDate: undefined,
+        mrr: undefined,
+        arr: undefined,
+        newMrr: undefined,
+        churnedMrr: undefined,
+        expansionMrr: undefined,
+        totalCustomers: undefined,
+        newCustomers: undefined,
+        churnedCustomers: undefined,
+        cac: undefined,
+        ltv: undefined,
+        ltvToCacRatio: undefined,
+        cacPaybackMonths: undefined,
+        netRevenueRetention: undefined,
+        grossRevenueRetention: undefined,
+      });
+      refetchFinancial();
+      refetchHistory();
+    } catch (error) {
+      console.error("Failed to update financial metrics:", error);
+    }
+  };
+
+  const handleDeleteFinancial = async (id: number) => {
+    if (!confirm("Are you sure you want to delete this financial metrics entry?")) return;
+    try {
+      await internalOpsApi.updateFinancialMetrics(id, {});
+      refetchFinancial();
+      refetchHistory();
+    } catch (error) {
+      console.error("Failed to delete financial metrics:", error);
+    }
+  };
+
+  const openEditFinancialModal = (metrics: FinancialMetrics) => {
+    setEditingFinancial(metrics);
+    setFinancialFormData(metrics);
+  };
+
   return (
-    <StudioShell title="Internal Operations" subtitle="Financial metrics and day-to-day activity tracking for Conddo.">
+    <StudioShell 
+      title="Internal Operations" 
+      subtitle="Financial metrics and day-to-day activity tracking for Conddo."
+      actions={
+        <button 
+          onClick={() => setShowFinancialModal(true)}
+          className="flex items-center gap-2 rounded-lg bg-blue-500 px-4 py-2 text-[13px] font-medium text-white hover:bg-blue-600"
+        >
+          <Plus size={16} />
+          Add Financial Metrics
+        </button>
+      }
+    >
       <div className="space-y-6">
         {/* Quick Links */}
         <section>
@@ -163,6 +286,43 @@ export default function InternalOpsPage() {
               </p>
             </div>
           </div>
+
+          {/* Financial History */}
+          {financialHistory && financialHistory.length > 0 && (
+            <div className="mt-6">
+              <h3 className="mb-4 text-[14px] font-medium text-ink">Financial History</h3>
+              <div className="rounded-xl border border-neutral-border bg-neutral-surface p-5">
+                <div className="space-y-3">
+                  {financialHistory.slice(0, 5).map((metrics) => (
+                    <div key={metrics.id} className="flex items-center gap-4 rounded-lg border border-neutral-border bg-neutral-bg p-4">
+                      <div className="flex-1">
+                        <p className="text-[14px] font-medium text-ink">{metrics.month}</p>
+                        <p className="text-[12px] text-content-secondary">
+                          Cash: {formatCurrency(metrics.cashBalance)} | MRR: {formatCurrency(metrics.mrr)} | Burn: {formatCurrency(metrics.netBurnRate)}/mo
+                        </p>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <button 
+                          onClick={() => openEditFinancialModal(metrics)}
+                          className="inline-flex h-8 w-8 items-center justify-center rounded-md text-content-secondary hover:bg-neutral-surface2 hover:text-ink"
+                          title="Edit"
+                        >
+                          <Edit2 size={14} />
+                        </button>
+                        <button 
+                          onClick={() => metrics.id && handleDeleteFinancial(metrics.id)}
+                          className="inline-flex h-8 w-8 items-center justify-center rounded-md text-content-secondary hover:bg-red-50 hover:text-red-600"
+                          title="Delete"
+                        >
+                          <Trash2 size={14} />
+                        </button>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </div>
+          )}
         </section>
 
         {/* Operational Activities Section */}
@@ -253,6 +413,179 @@ export default function InternalOpsPage() {
           </div>
         </section>
       </div>
+
+      {/* Financial Metrics Create/Edit Modal */}
+      {(showFinancialModal || editingFinancial) && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center">
+          <div className="absolute inset-0 bg-black/60" onClick={() => {
+            setShowFinancialModal(false);
+            setEditingFinancial(null);
+          }} />
+          <div className="relative z-10 w-full max-w-lg max-h-[90vh] overflow-y-auto rounded-xl border border-neutral-border bg-neutral-surface p-6">
+            <div className="mb-4 flex items-center justify-between">
+              <h3 className="text-[16px] font-semibold text-ink">
+                {editingFinancial ? "Edit Financial Metrics" : "Add Financial Metrics"}
+              </h3>
+              <button 
+                onClick={() => {
+                  setShowFinancialModal(false);
+                  setEditingFinancial(null);
+                }}
+                className="inline-flex h-8 w-8 items-center justify-center rounded-md text-content-secondary hover:bg-neutral-surface2 hover:text-ink"
+              >
+                <X size={18} />
+              </button>
+            </div>
+            
+            <div className="space-y-4">
+              <div>
+                <label className="mb-1 block text-[12px] font-medium text-ink">Month (YYYY-MM)</label>
+                <input
+                  type="month"
+                  value={financialFormData.month}
+                  onChange={(e) => setFinancialFormData({ ...financialFormData, month: e.target.value })}
+                  className="w-full rounded-lg border border-neutral-border bg-neutral-bg px-3 py-2 text-[13px] text-ink focus:border-primary focus:outline-none"
+                />
+              </div>
+
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="mb-1 block text-[12px] font-medium text-ink">Cash Balance</label>
+                  <input
+                    type="number"
+                    value={financialFormData.cashBalance || ""}
+                    onChange={(e) => setFinancialFormData({ ...financialFormData, cashBalance: e.target.value ? Number(e.target.value) : undefined })}
+                    className="w-full rounded-lg border border-neutral-border bg-neutral-bg px-3 py-2 text-[13px] text-ink placeholder:text-content-muted focus:border-primary focus:outline-none"
+                    placeholder="0"
+                  />
+                </div>
+                <div>
+                  <label className="mb-1 block text-[12px] font-medium text-ink">Net Burn Rate</label>
+                  <input
+                    type="number"
+                    value={financialFormData.netBurnRate || ""}
+                    onChange={(e) => setFinancialFormData({ ...financialFormData, netBurnRate: e.target.value ? Number(e.target.value) : undefined })}
+                    className="w-full rounded-lg border border-neutral-border bg-neutral-bg px-3 py-2 text-[13px] text-ink placeholder:text-content-muted focus:border-primary focus:outline-none"
+                    placeholder="0"
+                  />
+                </div>
+              </div>
+
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="mb-1 block text-[12px] font-medium text-ink">Cash Runway (months)</label>
+                  <input
+                    type="number"
+                    value={financialFormData.cashRunwayMonths || ""}
+                    onChange={(e) => setFinancialFormData({ ...financialFormData, cashRunwayMonths: e.target.value ? Number(e.target.value) : undefined })}
+                    className="w-full rounded-lg border border-neutral-border bg-neutral-bg px-3 py-2 text-[13px] text-ink placeholder:text-content-muted focus:border-primary focus:outline-none"
+                    placeholder="0"
+                  />
+                </div>
+                <div>
+                  <label className="mb-1 block text-[12px] font-medium text-ink">MRR</label>
+                  <input
+                    type="number"
+                    value={financialFormData.mrr || ""}
+                    onChange={(e) => setFinancialFormData({ ...financialFormData, mrr: e.target.value ? Number(e.target.value) : undefined })}
+                    className="w-full rounded-lg border border-neutral-border bg-neutral-bg px-3 py-2 text-[13px] text-ink placeholder:text-content-muted focus:border-primary focus:outline-none"
+                    placeholder="0"
+                  />
+                </div>
+              </div>
+
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="mb-1 block text-[12px] font-medium text-ink">ARR</label>
+                  <input
+                    type="number"
+                    value={financialFormData.arr || ""}
+                    onChange={(e) => setFinancialFormData({ ...financialFormData, arr: e.target.value ? Number(e.target.value) : undefined })}
+                    className="w-full rounded-lg border border-neutral-border bg-neutral-bg px-3 py-2 text-[13px] text-ink placeholder:text-content-muted focus:border-primary focus:outline-none"
+                    placeholder="0"
+                  />
+                </div>
+                <div>
+                  <label className="mb-1 block text-[12px] font-medium text-ink">Total Customers</label>
+                  <input
+                    type="number"
+                    value={financialFormData.totalCustomers || ""}
+                    onChange={(e) => setFinancialFormData({ ...financialFormData, totalCustomers: e.target.value ? Number(e.target.value) : undefined })}
+                    className="w-full rounded-lg border border-neutral-border bg-neutral-bg px-3 py-2 text-[13px] text-ink placeholder:text-content-muted focus:border-primary focus:outline-none"
+                    placeholder="0"
+                  />
+                </div>
+              </div>
+
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="mb-1 block text-[12px] font-medium text-ink">CAC</label>
+                  <input
+                    type="number"
+                    value={financialFormData.cac || ""}
+                    onChange={(e) => setFinancialFormData({ ...financialFormData, cac: e.target.value ? Number(e.target.value) : undefined })}
+                    className="w-full rounded-lg border border-neutral-border bg-neutral-bg px-3 py-2 text-[13px] text-ink placeholder:text-content-muted focus:border-primary focus:outline-none"
+                    placeholder="0"
+                  />
+                </div>
+                <div>
+                  <label className="mb-1 block text-[12px] font-medium text-ink">LTV</label>
+                  <input
+                    type="number"
+                    value={financialFormData.ltv || ""}
+                    onChange={(e) => setFinancialFormData({ ...financialFormData, ltv: e.target.value ? Number(e.target.value) : undefined })}
+                    className="w-full rounded-lg border border-neutral-border bg-neutral-bg px-3 py-2 text-[13px] text-ink placeholder:text-content-muted focus:border-primary focus:outline-none"
+                    placeholder="0"
+                  />
+                </div>
+              </div>
+
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="mb-1 block text-[12px] font-medium text-ink">LTV:CAC Ratio</label>
+                  <input
+                    type="number"
+                    step="0.01"
+                    value={financialFormData.ltvToCacRatio || ""}
+                    onChange={(e) => setFinancialFormData({ ...financialFormData, ltvToCacRatio: e.target.value ? Number(e.target.value) : undefined })}
+                    className="w-full rounded-lg border border-neutral-border bg-neutral-bg px-3 py-2 text-[13px] text-ink placeholder:text-content-muted focus:border-primary focus:outline-none"
+                    placeholder="0"
+                  />
+                </div>
+                <div>
+                  <label className="mb-1 block text-[12px] font-medium text-ink">Net Revenue Retention</label>
+                  <input
+                    type="number"
+                    step="0.01"
+                    value={financialFormData.netRevenueRetention || ""}
+                    onChange={(e) => setFinancialFormData({ ...financialFormData, netRevenueRetention: e.target.value ? Number(e.target.value) : undefined })}
+                    className="w-full rounded-lg border border-neutral-border bg-neutral-bg px-3 py-2 text-[13px] text-ink placeholder:text-content-muted focus:border-primary focus:outline-none"
+                    placeholder="0"
+                  />
+                </div>
+              </div>
+
+              <div className="flex gap-3 pt-4">
+                <button
+                  onClick={editingFinancial ? handleUpdateFinancial : handleCreateFinancial}
+                  className="flex-1 rounded-lg bg-blue-500 px-4 py-2 text-[13px] font-medium text-white hover:bg-blue-600"
+                >
+                  {editingFinancial ? "Update" : "Create"}
+                </button>
+                <button
+                  onClick={() => {
+                    setShowFinancialModal(false);
+                    setEditingFinancial(null);
+                  }}
+                  className="flex-1 rounded-lg border border-neutral-border bg-neutral-surface px-4 py-2 text-[13px] font-medium text-ink hover:bg-neutral-bg"
+                >
+                  Cancel
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </StudioShell>
   );
 }
