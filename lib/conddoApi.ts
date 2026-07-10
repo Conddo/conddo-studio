@@ -132,7 +132,7 @@ export type TenantSiteAdminRow = {
 
 export const conddoAdminApi = {
   overview: () => request<PlatformOverview>("/admin/platform/overview"),
-  pendingSites: () => request<TenantSiteAdminRow[]>("/admin/sites?filter=PENDING"),
+  pendingSites: () => request<TenantSiteAdminRow[]>("/admin/sites?filter=pending"),
   approveSite: (siteId: string) =>
     request<TenantSiteAdminRow>(`/admin/sites/${siteId}/approve`, { method: "POST" }),
 };
