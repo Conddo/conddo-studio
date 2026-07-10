@@ -186,12 +186,12 @@ function PlatformDashboard({ onSignOut }: { onSignOut: () => void }) {
   }
 
   return (
-    <div className="min-h-screen bg-neutral-bg">
+    <div className="min-h-screen bg-cinema-base text-white">
       <TopBar onSignOut={onSignOut} onRefresh={load} loading={loading} />
 
       <main className="mx-auto max-w-6xl space-y-6 px-4 py-6 md:px-8">
         {error && (
-          <div className="flex items-start gap-2.5 rounded-lg border border-danger/25 bg-rose-50 px-4 py-3 text-[13.5px] text-rose-700">
+          <div className="flex items-start gap-2.5 rounded-lg border border-rose-500/25 bg-rose-500/[0.08] px-4 py-3 text-[13.5px] text-rose-200">
             <AlertTriangle size={16} className="mt-0.5 shrink-0" />
             <p>{error}</p>
           </div>
@@ -209,12 +209,12 @@ function TopBar({
   onSignOut, onRefresh, loading,
 }: { onSignOut: () => void; onRefresh: () => void; loading: boolean }) {
   return (
-    <header className="sticky top-0 z-30 flex items-center justify-between border-b border-neutral-border bg-white/85 px-4 py-3 backdrop-blur md:px-8">
+    <header className="sticky top-0 z-30 flex items-center justify-between border-b border-white/[0.06] bg-cinema-elev/85 px-4 py-3 backdrop-blur md:px-8">
       <div className="flex items-center gap-2">
-        <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary/[0.08] text-primary">
+        <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary/[0.15] text-primary">
           <Sparkles size={16} strokeWidth={2.25} />
         </div>
-        <p className="text-[14.5px] font-semibold text-ink">Conddo Studio</p>
+        <p className="text-[14.5px] font-semibold text-white">Conddo Studio</p>
       </div>
       <div className="flex items-center gap-1.5">
         <button
@@ -222,14 +222,14 @@ function TopBar({
           onClick={onRefresh}
           disabled={loading}
           title="Refresh"
-          className="inline-flex h-8 w-8 items-center justify-center rounded-md text-neutral-fg hover:bg-neutral-bg disabled:opacity-40"
+          className="inline-flex h-8 w-8 items-center justify-center rounded-md text-white/60 hover:bg-white/[0.05] hover:text-white disabled:opacity-40"
         >
           <RefreshCcw size={14} className={loading ? "animate-spin" : ""} />
         </button>
         <button
           type="button"
           onClick={onSignOut}
-          className="inline-flex items-center gap-1 rounded-md px-2.5 py-1.5 text-[13px] text-neutral-fg hover:bg-neutral-bg"
+          className="inline-flex items-center gap-1 rounded-md px-2.5 py-1.5 text-[13px] text-white/70 hover:bg-white/[0.05] hover:text-white"
         >
           <LogOut size={14} strokeWidth={2.25} />
           Sign out
@@ -260,19 +260,19 @@ function MetricsRow({ overview }: { overview: PlatformOverview }) {
           key={label}
           className={`rounded-xl border p-4 ${
             tone === "warn"
-              ? "border-amber-300/60 bg-amber-50"
-              : "border-neutral-border bg-white"
+              ? "border-amber-500/25 bg-amber-500/[0.06]"
+              : "border-white/[0.08] bg-cinema-elev"
           }`}
         >
           <div className="mb-1 flex items-center justify-between">
-            <p className="text-[11.5px] font-medium uppercase tracking-[0.06em] text-neutral-fg">
+            <p className="text-[11.5px] font-medium uppercase tracking-[0.06em] text-white/50">
               {label}
             </p>
-            <Icon size={14} className={tone === "warn" ? "text-amber-600" : "text-neutral-fg"} />
+            <Icon size={14} className={tone === "warn" ? "text-amber-300" : "text-white/50"} />
           </div>
-          <p className="text-[24px] font-semibold tracking-tight text-ink">{value}</p>
+          <p className="text-[24px] font-semibold tracking-tight text-white">{value}</p>
           <p className={`mt-0.5 text-[12.5px] ${
-            tone === "warn" ? "text-amber-800" : "text-neutral-fg"
+            tone === "warn" ? "text-amber-200" : "text-white/55"
           }`}>
             {hint}
           </p>
@@ -295,25 +295,25 @@ function BreakdownCard({ title, data }: { title: string; data: Record<string, nu
   const entries = Object.entries(data).sort((a, b) => b[1] - a[1]);
   const total = entries.reduce((sum, [, v]) => sum + v, 0);
   return (
-    <section className="rounded-xl border border-neutral-border bg-white p-4">
-      <p className="mb-3 text-[11.5px] font-medium uppercase tracking-[0.06em] text-neutral-fg">
+    <section className="rounded-xl border border-white/[0.08] bg-cinema-elev p-4">
+      <p className="mb-3 text-[11.5px] font-medium uppercase tracking-[0.06em] text-white/50">
         {title}
       </p>
       {entries.length === 0 ? (
-        <p className="py-4 text-center text-[13px] italic text-neutral-fg">No data yet</p>
+        <p className="py-4 text-center text-[13px] italic text-white/40">No data yet</p>
       ) : (
         <ul className="space-y-2.5">
           {entries.map(([key, val]) => {
             const pct = total > 0 ? Math.round((val / total) * 100) : 0;
             return (
               <li key={key}>
-                <div className="mb-1 flex items-center justify-between text-[13px] text-ink">
+                <div className="mb-1 flex items-center justify-between text-[13px] text-white">
                   <span className="font-medium">{friendlyLabel(key)}</span>
-                  <span className="tabular-nums text-neutral-fg">
+                  <span className="tabular-nums text-white/55">
                     {val.toLocaleString()} <span className="ml-1 text-[11.5px]">({pct}%)</span>
                   </span>
                 </div>
-                <div className="h-1.5 w-full overflow-hidden rounded-full bg-neutral-bg">
+                <div className="h-1.5 w-full overflow-hidden rounded-full bg-white/[0.05]">
                   <div className="h-full rounded-full bg-primary/70" style={{ width: `${pct}%` }} />
                 </div>
               </li>
@@ -334,41 +334,41 @@ function QaQueue({
   loading: boolean;
 }) {
   return (
-    <section className="rounded-xl border border-neutral-border bg-white">
-      <div className="flex items-center justify-between border-b border-neutral-border px-4 py-3">
-        <p className="text-[13.5px] font-medium text-ink">Sites awaiting QA</p>
+    <section className="rounded-xl border border-white/[0.08] bg-cinema-elev">
+      <div className="flex items-center justify-between border-b border-white/[0.06] px-4 py-3">
+        <p className="text-[13.5px] font-medium text-white">Sites awaiting QA</p>
         {rows && rows.length > 0 && (
-          <span className="rounded-full bg-amber-50 px-2 py-0.5 text-[11.5px] font-medium text-amber-800">
+          <span className="rounded-full bg-amber-500/[0.12] px-2 py-0.5 text-[11.5px] font-medium text-amber-200">
             {rows.length} pending
           </span>
         )}
       </div>
       {loading && (
-        <div className="p-8 text-center text-[13px] text-neutral-fg">Loading…</div>
+        <div className="p-8 text-center text-[13px] text-white/45">Loading…</div>
       )}
       {!loading && rows && rows.length === 0 && (
         <div className="p-8 text-center">
-          <CheckCircle2 size={20} className="mx-auto mb-2 text-emerald-600" />
-          <p className="text-[13.5px] font-medium text-ink">Queue empty</p>
-          <p className="mt-1 text-[12.5px] text-neutral-fg">No sites waiting for review.</p>
+          <CheckCircle2 size={20} className="mx-auto mb-2 text-emerald-300" />
+          <p className="text-[13.5px] font-medium text-white">Queue empty</p>
+          <p className="mt-1 text-[12.5px] text-white/50">No sites waiting for review.</p>
         </div>
       )}
       {!loading && rows && rows.length > 0 && (
-        <ul className="divide-y divide-neutral-border">
+        <ul className="divide-y divide-white/[0.06]">
           {rows.map((site) => (
             <li key={site.id} className="flex items-center justify-between gap-3 px-4 py-3">
               <div className="min-w-0">
-                <p className="text-[14px] font-medium text-ink">
+                <p className="text-[14px] font-medium text-white">
                   {site.subdomain ?? site.customDomain ?? "Unnamed site"}
                 </p>
-                <p className="mt-0.5 truncate text-[12.5px] text-neutral-fg">
+                <p className="mt-0.5 truncate text-[12.5px] text-white/50">
                   Submitted:{" "}
                   {site.submittedUrl ? (
                     <a
                       href={site.submittedUrl}
                       target="_blank"
                       rel="noreferrer"
-                      className="inline-flex items-center gap-0.5 text-primary hover:underline"
+                      className="inline-flex items-center gap-0.5 text-primary-light hover:underline"
                     >
                       {site.submittedUrl} <ExternalLink size={11} />
                     </a>
@@ -381,7 +381,7 @@ function QaQueue({
                 type="button"
                 onClick={() => onApprove(site.id)}
                 disabled={approving === site.id}
-                className="inline-flex shrink-0 items-center gap-1 rounded-md border border-emerald-300 bg-emerald-50 px-3 py-1.5 text-[13px] font-medium text-emerald-800 transition-colors hover:bg-emerald-100 disabled:opacity-60"
+                className="inline-flex shrink-0 items-center gap-1 rounded-md border border-emerald-500/25 bg-emerald-500/[0.08] px-3 py-1.5 text-[13px] font-medium text-emerald-200 transition-colors hover:bg-emerald-500/[0.16] disabled:opacity-60"
               >
                 {approving === site.id ? "Approving…" : "Approve"}
               </button>
