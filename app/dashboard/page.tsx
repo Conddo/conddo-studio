@@ -43,7 +43,6 @@ export default function StudioDashboard() {
 // ----- Sign-in ------------------------------------------------------------
 
 function SignInCard({ onSignedIn }: { onSignedIn: () => void }) {
-  const [tenantSlug, setTenantSlug] = useState("platform");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState<string | null>(null);
@@ -54,9 +53,13 @@ function SignInCard({ onSignedIn }: { onSignedIn: () => void }) {
     setBusy(true);
     setError(null);
     try {
-      const result = await loginAdmin({ tenantSlug: tenantSlug.trim(), email: email.trim(), password });
-      if (result.role !== "SUPER_ADMIN") {
-        setError(`This account has role ${result.role}. Studio needs SUPER_ADMIN.`);
+      const result = await loginAdmin({ email: email.trim(), password });
+      // Staff bootstrap seeds SUPER_ADMIN role (internal_role claim).
+      // Accept both role and internal_role naming variants defensively.
+      const role = (result as { role?: string; internalRole?: string }).role
+        ?? (result as { internalRole?: string }).internalRole;
+      if (role && role !== "SUPER_ADMIN") {
+        setError(`This account has role ${role}. Studio needs SUPER_ADMIN.`);
         return;
       }
       onSignedIn();
@@ -67,63 +70,65 @@ function SignInCard({ onSignedIn }: { onSignedIn: () => void }) {
     }
   }
 
+  const inputCls =
+    "h-11 w-full rounded-md border border-white/10 bg-black/40 px-3.5 text-[15px] text-white " +
+    "placeholder:text-white/35 focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20";
+
   return (
-    <div className="flex min-h-screen items-center justify-center bg-neutral-bg px-4">
+    <div className="flex min-h-screen items-center justify-center bg-[#0a0a0c] px-4">
       <form
         onSubmit={submit}
-        className="w-full max-w-sm rounded-xl border border-neutral-border bg-white p-6 shadow-sm"
+        className="w-full max-w-sm rounded-xl border border-white/[0.08] bg-white/[0.03] p-7 backdrop-blur"
       >
-        <div className="mb-5 text-center">
-          <div className="mx-auto mb-2 flex h-10 w-10 items-center justify-center rounded-lg bg-primary/[0.08] text-primary">
-            <Sparkles size={18} strokeWidth={2.25} />
+        <div className="mb-6 text-center">
+          <div className="mx-auto mb-3 flex h-11 w-11 items-center justify-center rounded-lg bg-primary/[0.15] text-primary">
+            <Sparkles size={20} strokeWidth={2.25} />
           </div>
-          <h1 className="text-[18px] font-semibold text-ink">Conddo Studio</h1>
-          <p className="mt-0.5 text-[13px] text-neutral-fg">
+          <h1 className="text-[20px] font-semibold text-white">Conddo Studio</h1>
+          <p className="mt-1 text-[13.5px] text-white/55">
             Sign in with your platform admin account.
           </p>
         </div>
 
-        <div className="space-y-3">
-          <Field label="Tenant slug" htmlFor="s-slug">
-            <input
-              id="s-slug"
-              value={tenantSlug}
-              onChange={(e) => setTenantSlug(e.target.value)}
-              placeholder="platform"
-              className="h-10 w-full rounded-md border border-neutral-border px-3 text-[14px] outline-none focus:border-primary"
-              autoComplete="off"
-            />
-          </Field>
-          <Field label="Email" htmlFor="s-email">
+        <div className="space-y-4">
+          <div>
+            <label htmlFor="s-email" className="mb-1.5 block text-[11.5px] font-medium uppercase tracking-[0.06em] text-white/55">
+              Email
+            </label>
             <input
               id="s-email"
               type="email"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
-              className="h-10 w-full rounded-md border border-neutral-border px-3 text-[14px] outline-none focus:border-primary"
+              className={inputCls}
               autoComplete="username"
               autoFocus
+              placeholder="you@example.com"
             />
-          </Field>
-          <Field label="Password" htmlFor="s-pass">
+          </div>
+          <div>
+            <label htmlFor="s-pass" className="mb-1.5 block text-[11.5px] font-medium uppercase tracking-[0.06em] text-white/55">
+              Password
+            </label>
             <input
               id="s-pass"
               type="password"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
-              className="h-10 w-full rounded-md border border-neutral-border px-3 text-[14px] outline-none focus:border-primary"
+              className={inputCls}
               autoComplete="current-password"
+              placeholder="••••••••"
             />
-          </Field>
+          </div>
           {error && (
-            <p className="rounded-md border border-danger/25 bg-rose-50 px-3 py-2 text-[13px] text-rose-700">
+            <p className="rounded-md border border-rose-500/25 bg-rose-500/[0.08] px-3 py-2 text-[13px] text-rose-200">
               {error}
             </p>
           )}
           <button
             type="submit"
             disabled={busy || !email || !password}
-            className="mt-1 inline-flex h-10 w-full items-center justify-center rounded-md bg-primary text-[14px] font-medium text-white transition-colors hover:bg-primary/90 disabled:opacity-60"
+            className="mt-2 inline-flex h-11 w-full items-center justify-center rounded-md bg-primary text-[14.5px] font-medium text-white transition-colors hover:bg-primary/90 disabled:opacity-60"
           >
             {busy ? "Signing in…" : "Sign in"}
           </button>

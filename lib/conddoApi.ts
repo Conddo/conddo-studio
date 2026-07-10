@@ -78,12 +78,13 @@ async function request<T>(path: string, init: RequestInit = {}): Promise<T> {
   return (payload?.data as T);
 }
 
-/** POST /auth/login on the main API — issues a JWT with the caller's role
- *  claim. The SUPER_ADMIN bootstrap plants a staff user; caller supplies
- *  its credentials + the platform tenant slug it was bound to. */
-export async function loginAdmin(input: { tenantSlug: string; email: string; password: string })
+/** POST /auth/staff/login on the main API — separate from tenant /auth/login.
+ *  Staff users live in the global (non-RLS) staff_users table, are not
+ *  tenant-scoped, and log in with just email + password. SUPER_ADMIN role
+ *  gates the /admin/* surfaces. */
+export async function loginAdmin(input: { email: string; password: string })
 : Promise<{ accessToken: string; role: string; userId: string }> {
-  const res = await fetch(`${ROOT}/auth/login`, {
+  const res = await fetch(`${ROOT}/auth/staff/login`, {
     method: "POST",
     headers: { "Content-Type": "application/json", "Accept": "application/json" },
     body: JSON.stringify(input),
